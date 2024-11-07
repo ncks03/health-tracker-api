@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, PositiveInt
 from fastapi.responses import JSONResponse
-
+import json
 
 # Classes
 class User(BaseModel):
@@ -10,19 +10,23 @@ class User(BaseModel):
     gender: str
     length: PositiveInt
 
-# Databases
-users_db = [{"name": "Pietje", "age": 20, "gender": "M", "length": 182},{"name": "Hendrik", "age": 21, "gender": "M", "length": 190}]
+# Define database variables
+users_db = {
+    "users":[]
+}
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
+# Get requests
 @app.get("/users")
 def read_users():
     return JSONResponse(content=users_db)
 
 @app.get("/users/{user_id}")
 def read_user(user_id: int):
-    return JSONResponse(content=users_db[user_id])
+    return JSONResponse(content=users_db["users"][user_id])
+
+# Post requests
+@app.post("/users")
+def create_user(user: User):
+    users_db["users"].append(user.model_dump())
