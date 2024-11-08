@@ -1,9 +1,21 @@
 import json
-
+import psycopg2
+from dotenv import load_dotenv
 from datetime import date
 from fastapi import FastAPI
 from pydantic import BaseModel, PositiveInt
 from fastapi.responses import JSONResponse
+
+load_dotenv()
+
+# Connection to postgresql Database
+db_connection = psycopg2.connect(
+    database="health-app-db",
+    user=DB_USERNAME,
+    password=DB_PASSWORD,
+    host="localhost",  # IP Adress of DB host
+    port="5432"  # Standard host port
+)
 
 # Classes
 class User(BaseModel):
@@ -51,18 +63,3 @@ def create_user(user: User):
     with open("users_db.json", "w") as out_file:
         data["users"].append(user.dict())
         json.dump(data, out_file, ensure_ascii=False)
-
-a_user={
-    "name":"Henk",
-    "birth_date":"1999-11-03",
-    "gender":"M",
-    "length":185
-}
-with open("users_db.json", "r") as f:
-    data = json.load(f)
-    print(data)
-
-with open("users_db.json", "w") as out_file:
-    data["users"].append(a_user)
-    print(data)
-    json.dump(data, out_file, ensure_ascii=False)
