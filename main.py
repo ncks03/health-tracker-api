@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, PositiveInt
 from fastapi.responses import JSONResponse
 
+# Load environment variables
 load_dotenv()
 
 # Connection to postgresql Database
@@ -24,12 +25,14 @@ class User(BaseModel):
     gender: str
     length: PositiveInt
 
+# Functions
 def calculate_age(born):
     today = date.today()
     print(today)
     birth_date = date(year=int(born[0:4]), month=int(born[5:7]), day=int(born[8:10]))
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
+# Read users_db.json file
 users_db = {
     "users":[]
 }
@@ -43,6 +46,7 @@ with open("users_db.json", "r") as file:
         length = entry["length"]
         users_db["users"].append({"name": name, "age": age, "gender": gender, "length": length})
 
+# API Initialisation
 app = FastAPI()
 
 # Get requests
@@ -63,3 +67,12 @@ def create_user(user: User):
     with open("users_db.json", "w") as out_file:
         data["users"].append(user.dict())
         json.dump(data, out_file, ensure_ascii=False)
+
+# SQL Query
+@app.get("/get_data_from_db")
+def get_data_from_db():
+    cursor = db_connection.cursor()
+    cursor.execute("SELECT * FROM jouw_tabel_naam")
+    data = cursor.fetchall()
+    cursor.close()
+    return {"data": data}
