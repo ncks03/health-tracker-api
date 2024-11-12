@@ -1,13 +1,18 @@
 import json
 import psycopg2
+import os
 from dotenv import load_dotenv
 from datetime import date
 from fastapi import FastAPI
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel, PositiveInt, PastDate
 from fastapi.responses import JSONResponse
 
 # Load environment variables
 load_dotenv()
+
+# Variables
+DB_USERNAME = os.getenv("DB_USERNAME")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 # Connection to postgresql Database
 db_connection = psycopg2.connect(
@@ -21,7 +26,7 @@ db_connection = psycopg2.connect(
 # Classes
 class User(BaseModel):
     name: str
-    age: PositiveInt
+    birth_date: PastDate
     gender: str
     length: PositiveInt
 
@@ -49,30 +54,16 @@ with open("users_db.json", "r") as file:
 # API Initialisation
 app = FastAPI()
 
-# Get requests
-@app.get("/users")
-def read_users():
-    return JSONResponse(content=users_db)
-
-@app.get("/users/{user_id}")
-def read_user(user_id: int):
-    return JSONResponse(content=users_db["users"][user_id])
-
-# Post requests
-@app.post("/users")
-def create_user(user: User):
-    with open("users_db.json", "r") as f:
-        data = json.load(f)
-
-    with open("users_db.json", "w") as out_file:
-        data["users"].append(user.dict())
-        json.dump(data, out_file, ensure_ascii=False)
-
 # SQL Query
-@app.get("/get_data_from_db")
+@app.get("/users")
 def get_data_from_db():
     cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM jouw_tabel_naam")
+    cursor.execute("SELECT * FROM customers")
     data = cursor.fetchall()
     cursor.close()
     return {"data": data}
+
+@app.post("/users")
+def create_user(user: User):
+    cursor = db_connection.cursor()
+    cursor.execute("INSERT INTO public.users (name, birth_date, gender, length) VALUES (user[name], user[birth_date], user[gender], user[length])")
