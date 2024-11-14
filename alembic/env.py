@@ -1,7 +1,8 @@
 import os
 from logging.config import fileConfig
-import os
 
+
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -14,6 +15,8 @@ from entities.entities import Base
 config = context.config
 
 # Load the configuration object from
+
+load_dotenv()
 
 # Read the database URL from an environment
 database_url = os.getenv("DB_URL")  # replace with "alchemy-url" if that's the variable name
