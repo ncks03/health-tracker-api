@@ -1,9 +1,7 @@
 import os
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
 
 # this is the Alembic Config object, which provides
@@ -15,6 +13,7 @@ config = context.config
 
 # Get database url from .env
 database_url = os.getenv("DB_URL")
+
 # Check if database url variable is set
 if not database_url:
     raise ValueError("DB_URL environment variable not set")

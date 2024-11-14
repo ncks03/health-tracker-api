@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
+from .routers import customers
 from functions import calculate_age
 from entities.entities import Customer as CustomerEntity
 from entities.entities import Gym as GymEntity
@@ -38,21 +39,7 @@ def get_db():
 # API Initialisation
 app = FastAPI()
 
-# Endpoints definition
-@app.post("/create_customer")
-def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer= CustomerEntity(
-        gym_id=customer.gym_id,
-        first_name=customer.first_name,
-        last_name=customer.last_name,
-        birth_date=customer.birth_date,
-        gender=customer.gender,
-        length=customer.length,
-        activity_level=customer.activity_level
-    ) # Create db entity from data
-    db.add(customer) # Add entity to database
-    db.commit() # Commit changes
-    db.refresh(customer) # Refresh database
+app.include_router(customers.router)
 
 @app.post("/progress")
 def create_user(customer: CustomerDTO, db = Depends(get_db)):
