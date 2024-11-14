@@ -26,7 +26,7 @@ DB_URL = os.getenv("DB_URL")
 # Connection to postgresql Database
 engine = create_engine(DB_URL)
 
-SessionLocal = sessionmaker(autocommit=False, autoFlush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
     db = SessionLocal()
@@ -39,9 +39,17 @@ def get_db():
 app = FastAPI()
 
 # Endpoints definition
-@app.post("/customers")
+@app.post("/create_customer")
 def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer= CustomerEntity(**customer.dict()) # Create db entity from data
+    customer= CustomerEntity(
+        gym_id=customer.gym_id,
+        first_name=customer.first_name,
+        last_name=customer.last_name,
+        birth_date=customer.birth_date,
+        gender=customer.gender,
+        length=customer.length,
+        activity_level=customer.activity_level
+    ) # Create db entity from data
     db.add(customer) # Add entity to database
     db.commit() # Commit changes
     db.refresh(customer) # Refresh database
