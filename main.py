@@ -1,4 +1,3 @@
-import json
 import psycopg2
 import os
 from dotenv import load_dotenv
@@ -10,7 +9,6 @@ from fastapi.responses import JSONResponse
 # Load environment variables
 load_dotenv()
 
-# Variables
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
@@ -30,26 +28,36 @@ class User(BaseModel):
     gender: str
     length: PositiveInt
 
+class Customer(BaseModel):
+    gym_id: PositiveInt
+    first_name: str
+    last_name: str
+    birth_date: date
+    gender: str
+    length: PositiveInt
+    activity_level: PositiveInt
+
+class Gym(BaseModel):
+    gym_name: str
+    address_city: str
+
+class Progress(BaseModel):
+    customer_id: PositiveInt
+    date: date
+    weight: PositiveInt
+
+class Goal(BaseModel):
+    customer_id: PositiveInt
+    weight_goal: PositiveInt
+    start_date: date
+    end_date: date
+
 # Functions
 def calculate_age(born):
     today = date.today()
     print(today)
     birth_date = date(year=int(born[0:4]), month=int(born[5:7]), day=int(born[8:10]))
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-
-# Read users_db.json file
-users_db = {
-    "users":[]
-}
-
-with open("users_db.json", "r") as file:
-    data = json.load(file)
-    for entry in data["users"]:
-        name = entry["name"]
-        age = calculate_age(entry["birth_date"])
-        gender = entry["gender"]
-        length = entry["length"]
-        users_db["users"].append({"name": name, "age": age, "gender": gender, "length": length})
 
 # API Initialisation
 app = FastAPI()
