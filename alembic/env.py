@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 import os
 
@@ -22,6 +23,15 @@ config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
+
+# Get database url from .env
+database_url = os.getenv("DB_URL")
+# Check if database url variable is set
+if not database_url:
+    raise ValueError("DB_URL environment variable not set")
+# Set url in config option
+config.set_main_option("sqlalchemy.url", database_url)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
