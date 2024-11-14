@@ -1,10 +1,14 @@
+### Dependencies ###
 import psycopg2
 import os
 from dotenv import load_dotenv
 from datetime import date
 from fastapi import FastAPI
 from pydantic import BaseModel, PositiveInt, PastDate
-from fastapi.responses import JSONResponse
+
+### Imports ###
+from entities import *
+import dtos
 
 # Load environment variables
 load_dotenv()
@@ -20,37 +24,6 @@ db_connection = psycopg2.connect(
     host="localhost",  # IP Adress of DB host
     port="5432"  # Standard host port
 )
-
-# Classes
-class User(BaseModel):
-    name: str
-    birth_date: PastDate
-    gender: str
-    length: PositiveInt
-
-class Customer(BaseModel):
-    gym_id: PositiveInt
-    first_name: str
-    last_name: str
-    birth_date: date
-    gender: str
-    length: PositiveInt
-    activity_level: PositiveInt
-
-class Gym(BaseModel):
-    gym_name: str
-    address_city: str
-
-class Progress(BaseModel):
-    customer_id: PositiveInt
-    date: date
-    weight: PositiveInt
-
-class Goal(BaseModel):
-    customer_id: PositiveInt
-    weight_goal: PositiveInt
-    start_date: date
-    end_date: date
 
 # Functions
 def calculate_age(born):
@@ -72,6 +45,6 @@ def get_data_from_db():
     return {"data": data}
 
 @app.post("/users")
-def create_user(user: User):
+def create_user(customer: CustomerDTO):
     cursor = db_connection.cursor()
     cursor.execute("INSERT INTO public.users (name, birth_date, gender, length) VALUES (user[name], user[birth_date], user[gender], user[length])")
