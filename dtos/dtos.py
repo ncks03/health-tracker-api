@@ -1,4 +1,4 @@
-from pydantic import BaseModel, PositiveInt, PastDate
+from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate
 
 class UserDTO(BaseModel):
     name: str
@@ -10,7 +10,7 @@ class CustomerDTO(BaseModel):
     gym_id: PositiveInt
     first_name: str
     last_name: str
-    birth_date: date
+    birth_date: PastDate
     gender: str
     length: PositiveInt
     activity_level: PositiveInt
@@ -21,11 +21,11 @@ class GymDTO(BaseModel):
 
 class ProgressDTO(BaseModel):
     customer_id: PositiveInt
-    date: date
+    date: AwareDatetime
     weight: PositiveInt
 
 class GoalDTO(BaseModel):
     customer_id: PositiveInt
     weight_goal: PositiveInt
-    start_date: date
-    end_date: date
+    start_date: AwareDatetime
+    end_date: FutureDate
