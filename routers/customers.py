@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+from fastapi import Depends, APIRouter
+from dtos.dtos import CustomerDTO
+from entities.entities import Customer as CustomerEntity
+from main import get_db
 
 router = APIRouter(
     prefix="/customers",
