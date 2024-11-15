@@ -16,13 +16,14 @@ class Customer(Base):
     gender = Column(String, nullable=False)
     length = Column(Integer, nullable=False)
     activity_level = Column(Integer, nullable=False)
-    goals = relationship("Goal", back_populates="goals")
+    goals = relationship("Goal")
+    progress = relationship("Progress")
 
 class Gym(Base):
     __tablename__ = "gyms"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
-    customers = relationship("Gym", back_populates="customers")
+    customers = relationship("Customer")
     address_place = Column(String, nullable=False)
 
 class Progress(Base):

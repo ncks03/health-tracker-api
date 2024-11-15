@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
-from dtos.dtos import CustomerDTO
+from dtos.dtos import GymDTO
 import entities.entities as entities
 
 # Load environment variables
@@ -27,29 +27,24 @@ def get_db():
         db.close()
 
 router = APIRouter(
-    prefix="/customers",
-    tags=["customers"]
+    prefix="/gyms",
+    tags=["gyms"]
 )
 
 @router.get("/")
-async def read_customers(db = Depends(get_db)):
+async def read_gyms(db = Depends(get_db)):
     try:
-        db.execute("SELECT * FROM customers")
+        db.execute("SELECT * FROM gym")
     except:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-@router.post("/create_customer")
-async def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer= entities.Customer(
-        gym_id=customer.gym_id,
-        first_name=customer.first_name,
-        last_name=customer.last_name,
-        birth_date=customer.birth_date,
-        gender=customer.gender,
-        length=customer.length,
-        activity_level=customer.activity_level
+@router.post("/create_gym")
+async def create_user(gym: GymDTO, db = Depends(get_db)):
+    gym= entities.Gym(
+        name=gym.gym_name,
+        address_place=gym.address_city,
     ) # Create db entity from data
-    db.add(customer) # Add entity to database
+    db.add(gym) # Add entity to database
     db.commit() # Commit changes
-    db.refresh(customer) # Refresh database
-    return customer
+    db.refresh(gym) # Refresh database
+    return gym

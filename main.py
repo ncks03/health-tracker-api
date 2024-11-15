@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
-from .routers import customers
+from routers import customers, gyms
 from functions import calculate_age
 from entities.entities import Customer as CustomerEntity
 from entities.entities import Gym as GymEntity
@@ -38,8 +38,8 @@ def get_db():
 
 # API Initialisation
 app = FastAPI()
-
 app.include_router(customers.router)
+app.include_router(gyms.router)
 
 @app.post("/progress")
 def create_user(customer: CustomerDTO, db = Depends(get_db)):
