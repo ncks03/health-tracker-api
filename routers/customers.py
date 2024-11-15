@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from dtos.dtos import CustomerDTO
@@ -32,11 +32,9 @@ router = APIRouter(
 )
 
 @router.get("/")
-async def read_customers(db = Depends(get_db)):
-    try:
-        db.execute("SELECT * FROM customers")
-    except:
-        raise HTTPException(status_code=404, detail="Customer not found")
+async def read_customers(db = Depends(get_db)) -> list[CustomerDTO]:
+    data = db.execute(select(entities.Customer)).all()
+    return data
 
 @router.post("/create_customer")
 async def create_user(customer: CustomerDTO, db = Depends(get_db)):
