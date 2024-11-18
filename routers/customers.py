@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from dtos.dtos import CustomerDTO
 import entities.entities as entities
+from entities.entities import Customer as CustomerTable
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -31,21 +32,33 @@ router = APIRouter(
 
 @router.get("/")
 async def read_customers(db = Depends(get_db)):
-    data = db.query(entities.Customer).group_by(entities.Customer.id)
-    return data.all()
+    result = db.query(CustomerTable).order_by(entities.Customer.id)
+    return result.all()
 
 @router.get("/{customer_id}")
 async def read_customer_by_id(customer_id, db = Depends(get_db)):
-    statement = (
-        select(entities.Customer)
-        .where(entities.Customer.id==customer_id)
-    )
-    data = db.execute(statement)
-    return data.all()
+    try:
+        # Define sqlalchemy statement
+        statement = (
+            select(CustomerTable)
+            .where(CustomerTable.id==customer_id)
+        )
+        # Execute statement and store result
+        result = db.execute(statement).first()
+        # Store result in data dict
+        data = {
+            "data": list(result)
+        }
+        return data
+    except TypeError: #Raise exception for invalid ids
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer with id {customer_id} not found"
+        )
 
 @router.post("/create_customer")
 async def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer = entities.Customer(
+    customer = CustomerTable(
         gym_id=customer.gym_id,
         first_name=customer.first_name,
         last_name=customer.last_name,
