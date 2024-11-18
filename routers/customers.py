@@ -10,8 +10,6 @@ import entities.entities as entities
 ### DO NOT PUSH .ENV TO GIT ###
 load_dotenv()
 
-DB_USERNAME = os.getenv("DB_USERNAME") #Insert username variable name here
-DB_PASSWORD = os.getenv("DB_PASSWORD") #Insert password variable name here
 DB_URL = os.getenv("DB_URL")
 
 # Connection to postgresql Database
@@ -32,13 +30,22 @@ router = APIRouter(
 )
 
 @router.get("/")
-async def read_customers(db = Depends(get_db)) -> list[CustomerDTO]:
-    data = db.execute(select(entities.Customer)).all()
-    return data
+async def read_customers(db = Depends(get_db)):
+    data = db.query(entities.Customer).group_by(entities.Customer.id)
+    return data.all()
+
+@router.get("/{customer_id}")
+async def read_customer_by_id(customer_id, db = Depends(get_db)):
+    statement = (
+        select(entities.Customer)
+        .where(entities.Customer.id==customer_id)
+    )
+    data = db.execute(statement)
+    return data.all()
 
 @router.post("/create_customer")
 async def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer= entities.Customer(
+    customer = entities.Customer(
         gym_id=customer.gym_id,
         first_name=customer.first_name,
         last_name=customer.last_name,

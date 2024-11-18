@@ -1,5 +1,7 @@
 from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate
 
+# DTO (Data Transfer Object)
+
 class UserDTO(BaseModel):
     name: str
     birth_date: PastDate
