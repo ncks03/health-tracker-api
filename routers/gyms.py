@@ -1,12 +1,15 @@
 import os
 
+from dns.name import empty
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
+from sqlalchemy.util.queue import Empty
+
 from dtos.dtos import GymDTO
-from entities.entities import Gym
+from entities.entities import Gym, Customer
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -63,5 +66,17 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
         return gym
 
     # Only catch SQLAlchemy errors here
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Server error occurred during search")
+
+@router.get("/{gym_id}/customers")
+async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
+    try:
+        customers = db.query(Customer).filter(Customer.gym_id == gym_id).all()
+        # check if the customers variable empty
+        if not customers:
+            raise HTTPException(status_code=404, detail=f"Gym with id {gym_id} has no customers")
+
+        return customers
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Server error occurred during search")
