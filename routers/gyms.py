@@ -35,11 +35,18 @@ router = APIRouter(
 )
 
 @router.get("/")
-async def read_gyms(db = Depends(get_db)):
+async def read_gyms(city: str = None, db = Depends(get_db)):
     try:
-        return db.query(Gym).all()
-    except:
-        raise HTTPException(status_code=404, detail="gym not found")
+        if city is None:
+            return db.query(Gym).all()
+
+        gyms = db.query(Gym).filter(Gym.address_place == city).all()
+        if not gyms:
+            raise HTTPException(status_code=404, detail=f"No gyms found in {city}")
+        return gyms
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="an error occurred during search")
 
 @router.post("/")
 async def create_gym(gym: GymDTO, db = Depends(get_db)):
