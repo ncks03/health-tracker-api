@@ -69,6 +69,23 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Server error occurred during search")
 
+@router.delete("/{gym_id}")
+async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
+    try:
+        gym = db.query(Gym).filter(Gym.id == gym_id).first()
+
+        if gym is None:
+            raise HTTPException(status_code=404, detail=f"Gym with id {gym_id} not found")
+
+        db.delete(gym)
+        db.commit()
+        return {"message": f"Gym with id {gym_id} successfully deleted"}
+
+    # Only catch SQLAlchemy errors here
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Server error occurred during search")
+
+
 @router.get("/{gym_id}/customers")
 async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
     try:
