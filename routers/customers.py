@@ -7,8 +7,9 @@ from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from typing import Optional
+from datetime import date
 
-from dtos.dtos import CustomerDTO, GoalDTO
+from dtos.dtos import CustomerDTO, GoalDTO, ProgressDTO
 import entities.entities as entities
 from entities.entities import Customer as CustomerTable
 from entities.entities import Goal as GoalsTable
@@ -264,48 +265,75 @@ async def get_daily_calorie_intake(customer_id, db = Depends(get_db)):
 ### POST REQUESTS ###
 @router.post("/")
 async def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer = CustomerTable(
-        gym_id=customer.gym_id,
-        first_name=customer.first_name,
-        last_name=customer.last_name,
-        birth_date=customer.birth_date,
-        gender=customer.gender,
-        length=customer.length,
-        activity_level=customer.activity_level
-    ) # Create db entity from data
-    db.add(customer) # Add entity to database
-    db.commit() # Commit changes
-    db.refresh(customer) # Refresh database
-    return customer
+    try:
+        customer = CustomerTable(
+            gym_id=customer.gym_id,
+            first_name=customer.first_name,
+            last_name=customer.last_name,
+            birth_date=customer.birth_date,
+            gender=customer.gender,
+            length=customer.length,
+            activity_level=customer.activity_level
+        ) # Create db entity from data
+        db.add(customer) # Add entity to database
+        db.commit() # Commit changes
+        db.refresh(customer) # Refresh database
 
-@router.post("/")
-async def create_progress_for_user(progress: ProgressDTO, db = Depends(get_db)):
-    progress = ProgressTable(
-        gym_id=customer.gym_id,
-        first_name=customer.first_name,
-        last_name=customer.last_name,
-        birth_date=customer.birth_date,
-        gender=customer.gender,
-        length=customer.length,
-        activity_level=customer.activity_level
-    ) # Create db entity from data
-    db.add(customer) # Add entity to database
-    db.commit() # Commit changes
-    db.refresh(customer) # Refresh database
-    return customer
+        return JSONResponse(
+            status_code=201,
+            content={"message":f"Customer {customer.first_name} {customer.last_name} successfully added."}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
+        )
 
-@router.post("/")
-async def create_goal_for_user(goal: GoalDTO, db = Depends(get_db)):
-    goal = GoalTable(
-        gym_id=customer.gym_id,
-        first_name=customer.first_name,
-        last_name=customer.last_name,
-        birth_date=customer.birth_date,
-        gender=customer.gender,
-        length=customer.length,
-        activity_level=customer.activity_level
-    ) # Create db entity from data
-    db.add(customer) # Add entity to database
-    db.commit() # Commit changes
-    db.refresh(customer) # Refresh database
-    return customer
+@router.post("/{customer_id}/progress")
+async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db = Depends(get_db)):
+    try:
+        progress = ProgressTable(
+            customer_id=customer_id,
+            date=date.today(),
+            weight=progress.weight
+        ) # Create db entity from data
+        db.add(progress) # Add entity to database
+        db.commit() # Commit changes
+        db.refresh(progress) # Refresh database
+
+        return JSONResponse(
+            status_code=201,
+            content={"message": f"Progress successfully saved."}
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
+        )
+
+@router.post("/{customer_id}/goals")
+async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
+    try:
+        goal = GoalTable(
+            gym_id=customer.gym_id,
+            first_name=customer.first_name,
+            last_name=customer.last_name,
+            birth_date=customer.birth_date,
+            gender=customer.gender,
+            length=customer.length,
+            activity_level=customer.activity_level
+        ) # Create db entity from data
+        db.add(customer) # Add entity to database
+        db.commit() # Commit changes
+        db.refresh(customer) # Refresh database
+
+        return JSONResponse(
+            status_code=201,
+            content={"message": f"Customer {customer.first_name} {customer.last_name} successfully added."}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
+        )
