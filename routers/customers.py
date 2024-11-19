@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
 from dtos.dtos import CustomerDTO, GoalDTO
 import entities.entities as entities
@@ -39,11 +40,18 @@ router = APIRouter(
 
 @router.get("/")
 async def read_customers(db = Depends(get_db)):
-    result = db.query(CustomerTable).order_by(entities.Customer.id)
-    return result.all()
+    try:
+        result = db.query(CustomerTable).order_by(entities.Customer.id)
+        return result.all()
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 @router.get("/{customer_id}")
-async def read_customer_by_id(customer_id, db = Depends(get_db)):
+async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -51,45 +59,66 @@ async def read_customer_by_id(customer_id, db = Depends(get_db)):
             .where(CustomerTable.id==customer_id)
         )
         # Execute statement and store result
-        result = db.execute(statement).first()
+        result = db.execute(statement).scalars().first()
+
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="Customer not found"
+            )
+
+        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
+
         # Store result in data dict
         data = {
-            "data": list(result)
+            "data": result_json
         }
-        return data
 
-    except TypeError: #Raise exception for invalid ids
+        return JSONResponse(
+            status_code=200,
+            content=data
+        )
+
+    except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
             status_code=404,
-            detail=f"Customer with id {customer_id} not found"
+            detail=f"An error occurred: {e}"
         )
 
 @router.get("/{customer_id}/goals")
-async def read_customer_goals(customer_id, db = Depends(get_db)):
+async def read_customer_goals(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
-            select(CustomerTable)
-            .join(GoalsTable, GoalsTable.customer_id==customer_id)
-            .where(CustomerTable.id==customer_id)
+            select(GoalsTable)
+            .join(CustomerTable.first_name)
+            .where(GoalsTable.customer_id==customer_id)
+            .order_by(GoalsTable.start_date)
         )
         # Execute statement and store result
-        result = db.execute(statement).json()
+        result = db.execute(statement).scalars().all()
+
+        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
 
         data={
-            "data": list(result)
+            "customer_id": customer_id,
+            "customer_name": result_json["first_name"],
+            "data": result_json
         }
 
-        return data
+        return JSONResponse(
+            status_code=200,
+            content=data
+        )
 
-    except ValueError: #Raise exception for invalid ids
+    except TypeError: #Raise exception for invalid ids
         raise HTTPException(
             status_code=404,
             detail=f"No goals found for customer with id {customer_id}"
         )
 
 @router.get("/{customer_id}/progress")
-async def read_customer_progress(customer_id, db = Depends(get_db)):
+async def read_customer_progress(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -111,7 +140,7 @@ async def read_customer_progress(customer_id, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/progress/{progress_id}")
-async def customer_progress_by_id(customer_id, db = Depends(get_db)):
+async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -133,7 +162,7 @@ async def customer_progress_by_id(customer_id, db = Depends(get_db)):
         )
 
 @router.get("/")
-async def read_customer_by_name(customer_name, db = Depends(get_db)):
+async def read_customer_by_name(customer_name: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -153,6 +182,10 @@ async def read_customer_by_name(customer_name, db = Depends(get_db)):
             status_code=404,
             detail=f"Customer with id {customer_id} not found"
         )
+
+@router.get("/{customer_id}/daily_calorie_intake")
+async def get_daily_calorie_intake(customer_id, db = Depends(get_db)):
+    pass
 
 ### POST REQUESTS ###
 
