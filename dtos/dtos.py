@@ -23,7 +23,7 @@ class GymDTO(BaseModel):
 
 class ProgressDTO(BaseModel):
     customer_id: PositiveInt
-    date: AwareDatetime
+    date: PastDate
     weight: PositiveInt
 
 class GoalDTO(BaseModel):
