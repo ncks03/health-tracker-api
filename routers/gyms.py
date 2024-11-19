@@ -1,12 +1,10 @@
 import os
 
-from dns.name import empty
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
-from sqlalchemy.util.queue import Empty
 
 from dtos.dtos import GymDTO
 from entities.entities import Gym, Customer
