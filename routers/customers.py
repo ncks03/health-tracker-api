@@ -1,9 +1,12 @@
 import os
+import json
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
-from dtos.dtos import CustomerDTO
+from starlette.responses import JSONResponse
+
+from dtos.dtos import CustomerDTO, GoalDTO
 import entities.entities as entities
 from entities.entities import Customer as CustomerTable
 from entities.entities import Goal as GoalsTable
@@ -26,12 +29,14 @@ def get_db():
     finally:
         db.close()
 
+# Define router endpoint
 router = APIRouter(
     prefix="/customers",
     tags=["customers"]
 )
 
 ### GET REQUESTS ###
+
 @router.get("/")
 async def read_customers(db = Depends(get_db)):
     result = db.query(CustomerTable).order_by(entities.Customer.id)
@@ -65,18 +70,19 @@ async def read_customer_goals(customer_id, db = Depends(get_db)):
         # Define sqlalchemy statement
         statement = (
             select(CustomerTable)
-            .join(GoalsTable)
-            .where(GoalsTable.id==customer_id)
+            .join(GoalsTable, GoalsTable.customer_id==customer_id)
+            .where(CustomerTable.id==customer_id)
         )
         # Execute statement and store result
-        result = db.execute(statement).all()
-        # Store result in data dict
-        data = {
-            "data": list(result)
-        }
-        return data
+        result = db.execute(statement)
 
-    except TypeError: #Raise exception for invalid ids
+        data={
+            "data": [list(row) for row in result]
+        }
+
+        return JSONResponse(status_code=200, content=data)
+
+    except ValueError: #Raise exception for invalid ids
         raise HTTPException(
             status_code=404,
             detail=f"No goals found for customer with id {customer_id}"
@@ -149,6 +155,7 @@ async def read_customer_by_name(customer_name, db = Depends(get_db)):
         )
 
 ### POST REQUESTS ###
+
 @router.post("/create_customer")
 async def create_user(customer: CustomerDTO, db = Depends(get_db)):
     customer = CustomerTable(

@@ -8,13 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
-from routers import customers, gyms
-from functions import calculate_age
-from entities.entities import Customer as CustomerEntity
-from entities.entities import Gym as GymEntity
-from entities.entities import Progress as ProgressEntity
-from entities.entities import Goal as GoalEntity
-from dtos.dtos import CustomerDTO, GymDTO, ProgressDTO, GoalDTO
+from routers import customers, gyms, goals, progress
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -40,10 +34,5 @@ def get_db():
 app = FastAPI()
 app.include_router(customers.router)
 app.include_router(gyms.router)
-
-@app.post("/progress")
-def create_user(customer: CustomerDTO, db = Depends(get_db)):
-    customer= CustomerEntity(**customer.dict()) # Create db entity from data
-    db.add(customer) # Add entity to database
-    db.commit() # Commit changes
-    db.refresh(customer) # Refresh database
+app.include_router(goals.router)
+app.include_router(progress.router)
