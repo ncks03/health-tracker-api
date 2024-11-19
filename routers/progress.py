@@ -38,7 +38,7 @@ async def read_progress(db = Depends(get_db)):
     except:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-@router.post("/log_progress")
+@router.post("/")
 async def create_progress(gym: ProgressDTO, db = Depends(get_db)):
     gym= entities.Gym(
         name=gym.gym_name,

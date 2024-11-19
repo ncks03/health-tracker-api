@@ -38,7 +38,7 @@ async def read_goals(db = Depends(get_db)):
     except:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-@router.post("/create_goal")
+@router.post("/")
 async def create_user(goal: GoalDTO, db = Depends(get_db)):
     goal = entities.Goal(
         customer_id = goal.customer_id,

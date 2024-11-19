@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
-from starlette.responses import JSONResponse
+from fastapi.responses import JSONResponse
 
 from dtos.dtos import CustomerDTO, GoalDTO
 import entities.entities as entities
@@ -74,13 +74,13 @@ async def read_customer_goals(customer_id, db = Depends(get_db)):
             .where(CustomerTable.id==customer_id)
         )
         # Execute statement and store result
-        result = db.execute(statement)
+        result = db.execute(statement).json()
 
         data={
-            "data": [list(row) for row in result]
+            "data": list(result)
         }
 
-        return JSONResponse(status_code=200, content=data)
+        return data
 
     except ValueError: #Raise exception for invalid ids
         raise HTTPException(
@@ -156,7 +156,7 @@ async def read_customer_by_name(customer_name, db = Depends(get_db)):
 
 ### POST REQUESTS ###
 
-@router.post("/create_customer")
+@router.post("/")
 async def create_user(customer: CustomerDTO, db = Depends(get_db)):
     customer = CustomerTable(
         gym_id=customer.gym_id,

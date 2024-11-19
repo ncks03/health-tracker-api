@@ -38,7 +38,7 @@ async def read_gyms(db = Depends(get_db)):
     except:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-@router.post("/create_gym")
+@router.post("/")
 async def create_user(gym: GymDTO, db = Depends(get_db)):
     gym= entities.Gym(
         name=gym.gym_name,
