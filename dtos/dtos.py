@@ -18,8 +18,8 @@ class CustomerDTO(BaseModel):
     activity_level: PositiveInt
 
 class GymDTO(BaseModel):
-    gym_name: str
-    address_city: str
+    name: str
+    address_place: str
 
 class ProgressDTO(BaseModel):
     customer_id: PositiveInt
