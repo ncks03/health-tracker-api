@@ -27,7 +27,7 @@ class ProgressDTO(BaseModel):
     weight: PositiveInt
 
 class GoalDTO(BaseModel):
-    customer_id: PositiveInt
+    # customer_id: PositiveInt
     weight_goal: PositiveInt
     start_date: FutureDate
     end_date: FutureDate

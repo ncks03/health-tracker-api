@@ -315,22 +315,19 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
 @router.post("/{customer_id}/goals")
 async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
     try:
-        goal = GoalTable(
-            gym_id=customer.gym_id,
-            first_name=customer.first_name,
-            last_name=customer.last_name,
-            birth_date=customer.birth_date,
-            gender=customer.gender,
-            length=customer.length,
-            activity_level=customer.activity_level
+        goal = GoalsTable(
+            customer_id=customer_id,
+            weight_goal=goal.weight_goal,
+            start_date=goal.start_date,
+            end_date=goal.end_date
         ) # Create db entity from data
-        db.add(customer) # Add entity to database
+        db.add(goal) # Add entity to database
         db.commit() # Commit changes
-        db.refresh(customer) # Refresh database
+        db.refresh(goal) # Refresh database
 
         return JSONResponse(
             status_code=201,
-            content={"message": f"Customer {customer.first_name} {customer.last_name} successfully added."}
+            content={"message": f"Goal successfully added."}
         )
     except Exception as e:
         raise HTTPException(
