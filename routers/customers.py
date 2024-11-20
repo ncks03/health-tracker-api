@@ -260,7 +260,7 @@ async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
 
 @router.get("/{customer_id}/daily_calorie_intake")
 async def get_daily_calorie_intake(customer_id, db = Depends(get_db)):
-    pass
+    pass # Algorithm goes here
 
 ### POST REQUESTS ###
 @router.post("/")

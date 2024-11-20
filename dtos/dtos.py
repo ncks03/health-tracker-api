@@ -22,8 +22,8 @@ class GymDTO(BaseModel):
     address_place: str
 
 class ProgressDTO(BaseModel):
-    customer_id: PositiveInt
-    date: PastDate
+    # customer_id: PositiveInt
+    # date: PastDate
     weight: PositiveInt
 
 class GoalDTO(BaseModel):
