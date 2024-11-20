@@ -52,15 +52,15 @@ router = APIRouter(
 #             status_code=500,
 #             detail=str(e)
 #         )
-@router.get("/") #ISSUE: All entries with either last name or first name are returned, and not if only both are equal
+@router.get("/")
 async def read_customer_by_name(first_name: Optional[str] = None, last_name: Optional[str] = None, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         if first_name and last_name: # If both first name and last name are given
             statement = (
                 select(CustomerTable)
-                .where(CustomerTable.first_name==first_name
-                       and CustomerTable.last_name==last_name)
+                .where(CustomerTable.first_name==first_name)
+                .where(CustomerTable.last_name==last_name)
             )
         elif first_name: # If only first name is given
             statement = (
@@ -95,7 +95,7 @@ async def read_customer_by_name(first_name: Optional[str] = None, last_name: Opt
             "data": result_json
         }
 
-        return data
+        return JSONResponse(status_code=200, content=data)
 
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
