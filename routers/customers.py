@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, delete
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -79,6 +79,7 @@ async def read_customer_by_name(first_name: Optional[str] = None, last_name: Opt
         # Convert response to response model
         response = [
             CustomerResponse(
+                id = x.id,
                 first_name=x.first_name,
                 last_name=x.last_name,
                 birth_date=x.birth_date,
@@ -361,6 +362,62 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
             status_code=201,
             content={"message": f"Goal successfully added."}
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
+        )
+
+### PATCH REQUESTS ###
+
+@router.patch("/{customer_id}")
+#TODO - Make it possible to supply a user id to change the user
+def update_customer(customer: CustomerDTO, db = Depends(get_db)):
+    try:
+        customer = CustomerTable(
+            customer_id=customer.id,
+            gym_id=customer.gym_id,
+            first_name=customer.first_name,
+            last_name=customer.last_name,
+            birth_date=customer.birth_date,
+            gender=customer.gender,
+            length=customer.length,
+            activity_level=customer.activity_level
+        ) # Create db entity from data
+        db.update(CustomerTable).values(customer) # Add entity to database
+        db.commit() # Commit changes
+        db.refresh(customer) # Refresh database
+
+        return JSONResponse(
+            status_code=201,
+            content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
+        )
+
+### DELETE REQUESTS ###
+
+@router.delete("/{customer_id}")
+#TODO - Fix error: Class 'sqlalchemy.orm.decl_api.DeclarativeMeta' is not mapped;
+# was a class (models.entities.Customer) supplied where an instance was required?
+def delete_customer(customer_id, db = Depends(get_db)):
+    try:
+        statement = (
+            delete(CustomerTable)
+            .where(CustomerTable.id == customer_id)
+        )
+
+        db.execute(statement)
+        db.commit()
+        db.refresh(CustomerTable)
+        return JSONResponse(
+            status_code=200,
+            content={"message": f"Customer with id {customer_id} successfully deleted."}
+        )
+
     except Exception as e:
         raise HTTPException(
             status_code=400,

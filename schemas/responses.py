@@ -10,6 +10,7 @@ class UserResponse(BaseModel):
     length: PositiveInt
 
 class CustomerResponse(BaseModel):
+    id: int
     first_name: str
     last_name: str
     birth_date: PastDate
