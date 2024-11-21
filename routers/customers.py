@@ -9,11 +9,12 @@ from fastapi.encoders import jsonable_encoder
 from typing import Optional
 from datetime import date
 
-from dtos.dtos import CustomerDTO, GoalResponseDTO, ProgressDTO
-import entities.entities as entities
-from entities.entities import Customer as CustomerTable
-from entities.entities import Goal as GoalsTable
-from entities.entities import Progress as ProgressTable
+from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
+from schemas.responses import CustomerResponse, ProgressResponse, GoalResponse
+import models.entities as entities
+from models.entities import Customer as CustomerTable
+from models.entities import Goal as GoalsTable
+from models.entities import Progress as ProgressTable
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -44,7 +45,7 @@ router = APIRouter(
 # @router.get("/")
 # async def read_customers(db = Depends(get_db)):
 #     try:
-#         result = db.query(CustomerTable).order_by(entities.Customer.id)
+#         result = db.query(CustomerTable).order_by(models.Customer.id)
 #         return result.all()
 #
 #     except Exception as e:
@@ -313,7 +314,7 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
         )
 
 @router.post("/{customer_id}/goals")
-async def create_goal_for_user(customer_id: int, goal: GoalResponseDTO, db = Depends(get_db)):
+async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
     try:
         goal = GoalsTable(
             customer_id=customer_id,

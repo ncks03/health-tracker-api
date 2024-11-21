@@ -6,8 +6,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 
-from dtos.dtos import GymDTO
-from entities.entities import Gym, Customer
+from schemas.dtos import GymDTO
+from models.entities import Gym, Customer
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###

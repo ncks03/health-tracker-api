@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException, Query
 from starlette.responses import JSONResponse
 
-from dtos.dtos import GoalCreateDTO, GoalResponseDTO
-from entities.entities import Goal as GoalsTable
+from schemas.dtos import GoalDTO, GoalResponseDTO
+from models.entities import Goal as GoalsTable
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -61,7 +61,7 @@ async def read_goals(
         )
 
 @router.post("/")
-async def create_goal(goal: GoalCreateDTO, db = Depends(get_db)):
+async def create_goal(goal: GoalDTO, db = Depends(get_db)):
     try:
         goal = GoalsTable(
             customer_id = goal.customer_id,

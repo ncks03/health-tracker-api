@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
-from dtos.dtos import ProgressDTO
-import entities.entities as entities
+from schemas.dtos import ProgressDTO
+import models.entities as entities
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
