@@ -299,6 +299,10 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
 @router.post("/{customer_id}/progress")
 async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db = Depends(get_db)):
     try:
+        customer = db.query(CustomerTable).filter(CustomerTable.id==customer_id).first()
+        if not customer:
+            raise HTTPException(status_code=404, detail=f"No customer with id {customer_id}")
+
         progress = ProgressTable(
             customer_id=customer_id,
             date=date.today(),
