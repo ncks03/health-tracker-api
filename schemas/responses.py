@@ -10,12 +10,12 @@ class UserResponse(BaseModel):
     length: PositiveInt
 
 class CustomerResponse(BaseModel):
-    gym_id: PositiveInt
     first_name: str
     last_name: str
     birth_date: PastDate
     gender: str
     length: PositiveInt
+    gym_id: PositiveInt
     activity_level: PositiveInt
 
 class GymResponse(BaseModel):
@@ -24,6 +24,10 @@ class GymResponse(BaseModel):
 
 class ProgressResponse(BaseModel):
     customer_id: PositiveInt
+    date: PastDate
+    weight: PositiveInt
+
+class CustomerProgressResponse(BaseModel):
     date: PastDate
     weight: PositiveInt
 

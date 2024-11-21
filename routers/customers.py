@@ -4,12 +4,11 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from typing import Optional
 from datetime import date
 
 from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
-from schemas.responses import CustomerResponse, ProgressResponse, CustomerGoalResponse
+from schemas.responses import CustomerResponse, CustomerProgressResponse, CustomerGoalResponse
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
@@ -40,17 +39,6 @@ router = APIRouter(
 
 ### GET REQUESTS ###
 
-# @router.get("/")
-# async def read_customers(db = Depends(get_db)):
-#     try:
-#         result = db.query(CustomerTable).order_by(models.Customer.id)
-#         return result.all()
-#
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=str(e)
-#         )
 @router.get("/")
 async def read_customer_by_name(first_name: Optional[str] = None, last_name: Optional[str] = None, db = Depends(get_db)):
     try:
@@ -79,6 +67,7 @@ async def read_customer_by_name(first_name: Optional[str] = None, last_name: Opt
         # Execute statement and store result
         result = db.execute(statement).scalars().all()
 
+        # Check if customer is found in database
         if not result:
             raise HTTPException(
                 status_code=404,
@@ -87,14 +76,27 @@ async def read_customer_by_name(first_name: Optional[str] = None, last_name: Opt
                        f"{last_name if last_name else ""}"
             )
 
-        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
+        # Convert response to response model
+        response = [
+            CustomerResponse(
+                first_name=x.first_name,
+                last_name=x.last_name,
+                birth_date=x.birth_date,
+                gender=x.gender,
+                length=x.length,
+                gym_id=x.gym_id,
+                activity_level=x.activity_level
+            )
+            for x in result
+        ]
 
         # Store result in data dict
         data = {
-            "data": result_json
+            "customers": response
         }
 
-        return JSONResponse(status_code=200, content=data)
+        # Return data dictionary
+        return data
 
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
@@ -119,17 +121,23 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
                 detail="Customer not found"
             )
 
-        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
+        # Convert response to response model
+        response = CustomerResponse(
+                first_name=result.first_name,
+                last_name=result.last_name,
+                birth_date=result.birth_date,
+                gender=result.gender,
+                length=result.length,
+                gym_id=result.gym_id,
+                activity_level=result.activity_level
+            )
 
         # Store result in data dict
         data = {
-            "data": result_json
+            "data": response
         }
 
-        return JSONResponse(
-            status_code=200,
-            content=data
-        )
+        return data
 
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
@@ -173,7 +181,7 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         data={
             "customer_id": customer_id,
             "customer_name": customer_details.first_name + " " + customer_details.last_name,
-            "data": response
+            "goals": response
         }
 
         # Return JSON Response
@@ -204,19 +212,27 @@ async def read_customer_progress(customer_id: int, db = Depends(get_db)):
                 detail=f"No progress found for customer with id {customer_id}"
             )
 
-        # Convert results to json readable format
-        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
+        # Define results in goal response model
+        response = [
+            CustomerProgressResponse(
+                date=x.date,
+                weight=x.weight,
+            )
+            for x in result
+        ]
 
-        # Store result in data dict
+        # Get customer details from database
+        customer_details = db.query(CustomerTable).filter(CustomerTable.id == customer_id).first()
+
+        # Store results in data dict
         data = {
-            "data": result_json
+            "customer_id": customer_id,
+            "customer_name": customer_details.first_name + " " + customer_details.last_name,
+            "progress": response
         }
 
         # Return JSON Response
-        return JSONResponse(
-            status_code=200,
-            content=data
-        )
+        return data
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -245,19 +261,24 @@ async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
                 detail=f"No progress found for customer with id {customer_id}"
             )
 
-        # Convert results to json readable format
-        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
+        # Define results in goal response model
+        response = CustomerProgressResponse(
+                date=result.date,
+                weight=result.weight,
+            )
 
-        # Store result in data dict
+        # Get customer details from database
+        customer_details = db.query(CustomerTable).filter(CustomerTable.id == customer_id).first()
+
+        # Store results in data dict
         data = {
-            "data": result_json
+            "customer_id": customer_id,
+            "customer_name": customer_details.first_name + " " + customer_details.last_name,
+            "progress": response
         }
 
         # Return JSON Response
-        return JSONResponse(
-            status_code=200,
-            content=data
-        )
+        return data
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
