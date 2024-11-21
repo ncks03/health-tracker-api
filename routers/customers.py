@@ -40,7 +40,11 @@ router = APIRouter(
 ### GET REQUESTS ###
 
 @router.get("/")
-async def read_customer_by_name(first_name: Optional[str] = None, last_name: Optional[str] = None, db = Depends(get_db)):
+async def read_customer_by_name(
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        db = Depends(get_db)
+): # (;
     try:
         # Define sqlalchemy statement
         if first_name and last_name: # If both first name and last name are given
@@ -371,8 +375,7 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 ### PATCH REQUESTS ###
 
 @router.patch("/{customer_id}")
-#TODO - Make it possible to supply a user id to change the user
-def update_customer(customer: CustomerDTO, db = Depends(get_db)):
+async def update_customer(customer: CustomerDTO, db = Depends(get_db)):
     try:
         customer = CustomerTable(
             customer_id=customer.id,
@@ -401,9 +404,9 @@ def update_customer(customer: CustomerDTO, db = Depends(get_db)):
 ### DELETE REQUESTS ###
 
 @router.delete("/{customer_id}")
-#TODO - Fix error: Class 'sqlalchemy.orm.decl_api.DeclarativeMeta' is not mapped;
+#ERROR - Fix error: Class 'sqlalchemy.orm.decl_api.DeclarativeMeta' is not mapped;
 # was a class (models.entities.Customer) supplied where an instance was required?
-def delete_customer(customer_id, db = Depends(get_db)):
+async def delete_customer(customer_id, db = Depends(get_db)):
     try:
         statement = (
             delete(CustomerTable)
