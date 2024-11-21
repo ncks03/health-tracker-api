@@ -1,4 +1,5 @@
 from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate
+from datetime import date
 
 # DTO (Data Transfer Object)
 
@@ -26,8 +27,15 @@ class ProgressDTO(BaseModel):
     # date: PastDate
     weight: PositiveInt
 
-class GoalDTO(BaseModel):
+class GoalCreateDTO(BaseModel):
+    customer_id: PositiveInt
+    weight_goal: PositiveInt
+    start_date: date
+    end_date: FutureDate
+
+class GoalResponseDTO(BaseModel):
+    id: int
     # customer_id: PositiveInt
     weight_goal: PositiveInt
-    start_date: FutureDate
+    start_date: date
     end_date: FutureDate

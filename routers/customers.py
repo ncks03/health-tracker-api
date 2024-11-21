@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from typing import Optional
 from datetime import date
 
-from dtos.dtos import CustomerDTO, GoalDTO, ProgressDTO
+from dtos.dtos import CustomerDTO, GoalResponseDTO, ProgressDTO
 import entities.entities as entities
 from entities.entities import Customer as CustomerTable
 from entities.entities import Goal as GoalsTable
@@ -313,7 +313,7 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
         )
 
 @router.post("/{customer_id}/goals")
-async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
+async def create_goal_for_user(customer_id: int, goal: GoalResponseDTO, db = Depends(get_db)):
     try:
         goal = GoalsTable(
             customer_id=customer_id,
