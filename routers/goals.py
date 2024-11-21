@@ -7,7 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException, Query
 from starlette.responses import JSONResponse
 
-from schemas.dtos import GoalDTO, GoalResponseDTO
+from schemas.dtos import GoalDTO
+from schemas.responses import GoalResponse
 from models.entities import Goal as GoalsTable
 
 # Load environment variables
@@ -83,7 +84,7 @@ async def create_goal(goal: GoalDTO, db = Depends(get_db)):
             detail= f"Could not add new goal: {e}"
         )
 
-@router.get("/{goals_id}", response_model=GoalResponseDTO)
+@router.get("/{goals_id}", response_model=GoalResponse)
 async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
     """
     Fetch a specific goal by its ID.
