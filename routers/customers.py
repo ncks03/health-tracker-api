@@ -1,6 +1,7 @@
 import os
 import json
 from dotenv import load_dotenv
+from fastapi.openapi.models import Response
 from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
@@ -10,7 +11,7 @@ from typing import Optional
 from datetime import date
 
 from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
-from schemas.responses import CustomerResponse, ProgressResponse, GoalResponse
+from schemas.responses import CustomerResponse, ProgressResponse, CustomerGoalResponse
 import models.entities as entities
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
@@ -158,20 +159,28 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
                 detail=f"No goals found for customer with id {customer_id}"
             )
 
-        # Convert results to JSON readable format
-        result_json = jsonable_encoder(result, sqlalchemy_safe=True)
+        # Define results in goal response model
+        result = [
+            CustomerGoalResponse(
+            id=x.id,
+            weight_goal=x.weight_goal,
+            start_date=x.start_date,
+            end_date=x.end_date)
+            for x in result
+        ]
+
+        # Get customer details from database
+        customer_details = db.query(CustomerTable).filter(CustomerTable.id==customer_id).first()
 
         # Store results in data dict
         data={
             "customer_id": customer_id,
-            "data": result_json
+            "customer_name": customer_details.first_name + " " + customer_details.last_name,
+            "data": result
         }
 
         # Return JSON Response
-        return JSONResponse(
-            status_code=200,
-            content=data
-        )
+        return data
 
 
     except Exception as e:  # Raise exception for invalid ids

@@ -27,6 +27,12 @@ class ProgressResponse(BaseModel):
     date: PastDate
     weight: PositiveInt
 
+class CustomerGoalResponse(BaseModel):
+    id: int
+    weight_goal: PositiveInt
+    start_date: date
+    end_date: FutureDate
+
 class GoalResponse(BaseModel):
     id: int
     customer_id: PositiveInt
