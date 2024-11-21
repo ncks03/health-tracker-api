@@ -44,3 +44,14 @@ async def read_progress(db = Depends(get_db)):
             raise HTTPException(status_code=404, detail="No progresses found")
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="internal server error")
+
+@router.get("/{progress_id}")
+async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
+    try:
+        progress = db.query(Progress).filter(Progress.id == progress_id).first()
+        if progress:
+            return progress
+        else:
+            raise HTTPException(status_code=404, detail=f"No progress found with id {progress_id}")
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="internal server error")
