@@ -1,8 +1,6 @@
 import os
-import json
 from dotenv import load_dotenv
-from fastapi.openapi.models import Response
-from sqlalchemy import create_engine, text, select
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -12,7 +10,6 @@ from datetime import date
 
 from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
 from schemas.responses import CustomerResponse, ProgressResponse, CustomerGoalResponse
-import models.entities as entities
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
@@ -160,7 +157,7 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
             )
 
         # Define results in goal response model
-        result = [
+        response = [
             CustomerGoalResponse(
             id=x.id,
             weight_goal=x.weight_goal,
@@ -176,7 +173,7 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         data={
             "customer_id": customer_id,
             "customer_name": customer_details.first_name + " " + customer_details.last_name,
-            "data": result
+            "data": response
         }
 
         # Return JSON Response
