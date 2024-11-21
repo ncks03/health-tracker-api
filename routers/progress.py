@@ -1,10 +1,13 @@
 import os
+
+from dns.rdtypes.ANY.RRSIG import posixtime_to_sigtime
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from schemas.dtos import ProgressDTO
-import models.entities as entities
+from models.entities import Gym, Progress
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -34,17 +37,10 @@ router = APIRouter(
 @router.get("/")
 async def read_progress(db = Depends(get_db)):
     try:
-        db.execute("SELECT * FROM gym")
-    except:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-@router.post("/")
-async def create_progress(gym: ProgressDTO, db = Depends(get_db)):
-    gym= entities.Gym(
-        name=gym.gym_name,
-        address_place=gym.address_city,
-    ) # Create db entity from data
-    db.add(gym) # Add entity to database
-    db.commit() # Commit changes
-    db.refresh(gym) # Refresh database
-    return gym
+        progresses = db.query(Progress).all()
+        if progresses:
+            return progresses
+        else:
+            raise HTTPException(status_code=404, detail="No progresses found")
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="internal server error")
