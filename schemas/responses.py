@@ -19,6 +19,17 @@ class CustomerResponse(BaseModel):
     gym_id: PositiveInt
     activity_level: PositiveInt
 
+class SingleCustomerResponse(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    birth_date: PastDate
+    gender: str
+    length: PositiveInt
+    weight: PositiveInt
+    gym_id: PositiveInt
+    activity_level: PositiveInt
+
 class GymResponse(BaseModel):
     name: str
     address_place: str

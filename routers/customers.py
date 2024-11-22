@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, select, delete
+from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -8,7 +8,7 @@ from typing import Optional
 from datetime import date
 
 from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
-from schemas.responses import CustomerResponse, CustomerProgressResponse, CustomerGoalResponse
+from schemas.responses import CustomerResponse, CustomerProgressResponse, CustomerGoalResponse, SingleCustomerResponse
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
@@ -126,13 +126,21 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
                 detail="Customer not found"
             )
 
+        current_weight=(db.query(ProgressTable.weight)
+                        .filter(ProgressTable.customer_id == customer_id)
+                        .order_by(ProgressTable.date)
+                        .limit(1).scalar()
+                        )
+
         # Convert response to response model
-        response = CustomerResponse(
+        response = SingleCustomerResponse(
+                id = result.id,
                 first_name=result.first_name,
                 last_name=result.last_name,
                 birth_date=result.birth_date,
                 gender=result.gender,
                 length=result.length,
+                weight=current_weight,
                 gym_id=result.gym_id,
                 activity_level=result.activity_level
             )
@@ -404,18 +412,12 @@ async def update_customer(customer: CustomerDTO, db = Depends(get_db)):
 ### DELETE REQUESTS ###
 
 @router.delete("/{customer_id}")
-#ERROR - Fix error: Class 'sqlalchemy.orm.decl_api.DeclarativeMeta' is not mapped;
-# was a class (models.entities.Customer) supplied where an instance was required?
-async def delete_customer(customer_id, db = Depends(get_db)):
+async def delete_customer(customer_id: int, db = Depends(get_db)):
     try:
-        statement = (
-            delete(CustomerTable)
-            .where(CustomerTable.id == customer_id)
-        )
+        customer = db.query(CustomerTable).filter(CustomerTable.id == customer_id).first()
 
-        db.execute(statement)
+        db.delete(customer)
         db.commit()
-        db.refresh(CustomerTable)
         return JSONResponse(
             status_code=200,
             content={"message": f"Customer with id {customer_id} successfully deleted."}
