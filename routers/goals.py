@@ -112,6 +112,8 @@ async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
         # Execute the statement and retrieve a result.
         result = db.execute(statement).first()
 
+        print(result)
+
         # Check if results are empty
         if not result:
             raise HTTPException(
