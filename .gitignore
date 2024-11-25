@@ -3,3 +3,9 @@
 
 #environment variables
 /.env
+
+# Ignore the .terraform directory
+.terraform/
+
+# Ignore the terraform.tfvars file (used for sensitive data like credentials)
+terraform.tfvars
