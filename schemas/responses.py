@@ -52,6 +52,7 @@ class CustomerGoalResponse(BaseModel):
 class GoalResponse(BaseModel):
     id: int
     customer_id: PositiveInt
+    customer_name : str
     weight_goal: PositiveInt
     start_date: date
     end_date: FutureDate
