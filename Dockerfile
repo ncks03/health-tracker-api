@@ -14,11 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Kopieer de applicatiecode
 COPY . .
 
-# run alembic upgrades
-CMD ["alembic", "upgrade", "head"]
-
 # Exporteer poort 8000 voor de API
 EXPOSE 8000
 
 # Start de applicatie met Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000
