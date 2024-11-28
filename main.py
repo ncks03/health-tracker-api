@@ -8,8 +8,10 @@ from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
 from routers import customers, gyms, goals, progress
+from services.functions import run_migrations_online
 
-#alembic upgrade here
+# Run alembic migrations
+run_migrations_online()
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
