@@ -223,13 +223,13 @@ resource "kubernetes_deployment" "website" {
         }
         container {
           name  = "website"
-          image = "registry.digitalocean.com/devops-cicd/fast-api:latest"
+          image = "registry.digitalocean.com/devops-api/health-api:latest"
           image_pull_policy = "Always"
           port {
             container_port = 8000
           }
           env {
-            name  = "DATABASE_URL"
+            name  = "DB_URL"
             value = "postgresql://${var.db_user}:${var.db_password}@postgres.${var.namespace}.svc.cluster.local:5432/${var.db_name}"
           }
         }
