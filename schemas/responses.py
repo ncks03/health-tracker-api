@@ -1,4 +1,4 @@
-from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate
+from pydantic import BaseModel, PositiveInt, PositiveFloat, PastDate, AwareDatetime, FutureDate
 from datetime import date
 
 # Response models
@@ -17,7 +17,7 @@ class CustomerResponse(BaseModel):
     gender: str
     length: PositiveInt
     gym_id: PositiveInt
-    activity_level: PositiveInt
+    activity_level: PositiveFloat
 
 class SingleCustomerResponse(BaseModel):
     id: int
