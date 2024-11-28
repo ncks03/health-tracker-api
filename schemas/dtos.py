@@ -1,6 +1,9 @@
 from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate
 from datetime import date
 
+from pydantic.v1 import PositiveFloat
+
+
 # DTO (Data Transfer Object)
 
 class UserDTO(BaseModel):
@@ -16,7 +19,7 @@ class CustomerDTO(BaseModel):
     birth_date: PastDate
     gender: str
     length: PositiveInt
-    activity_level: PositiveInt
+    activity_level: PositiveFloat
 
 class GymDTO(BaseModel):
     name: str
