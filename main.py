@@ -1,5 +1,4 @@
 ### Dependencies ###
-# import psycopg2
 import os
 from datetime import date
 from dotenv import load_dotenv
@@ -9,6 +8,8 @@ from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
 from routers import customers, gyms, goals, progress
+
+#alembic upgrade here
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
