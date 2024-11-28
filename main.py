@@ -25,21 +25,6 @@ def get_db():
     finally:
         db.close()
 
-def run_migrations():
-    """
-    Run Alembic migrations.
-    """
-    # Maak een configuratie object voor alembic en laad de configuratie
-    alembic_cfg = Config("alembic.ini")
-
-    # Stel de sqlalchemy.url optie in de configuratie
-    alembic_cfg.set_main_option("sqlalchemy.url", DB_URL)
-
-    # Voer de upgrade uit
-    command.upgrade(alembic_cfg, "head")
-
-run_migrations()
-
 # API Initialisation
 app = FastAPI()
 app.include_router(customers.router)

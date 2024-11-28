@@ -132,6 +132,9 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
                         .limit(1).scalar()
                         )
 
+        if not current_weight:
+            current_weight = "No progress logged"
+
         # Convert response to response model
         response = SingleCustomerResponse(
                 id = result.id,
