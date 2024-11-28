@@ -55,4 +55,4 @@ class GoalResponse(BaseModel):
     customer_name : str
     weight_goal: PositiveInt
     start_date: date
-    end_date: FutureDate
+    end_date: date
