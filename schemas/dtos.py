@@ -1,7 +1,5 @@
-from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate
+from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate, PositiveFloat
 from datetime import date
-
-from pydantic.v1 import PositiveFloat
 
 
 # DTO (Data Transfer Object)
