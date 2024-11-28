@@ -1,5 +1,5 @@
 from pydantic import PastDate
-from sqlalchemy import Column, String, Integer, ForeignKey, Date
+from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -15,7 +15,7 @@ class Customer(Base):
     birth_date = Column(Date, nullable=False)
     gender = Column(String, nullable=False)
     length = Column(Integer, nullable=False)
-    activity_level = Column(Integer, nullable=False)
+    activity_level = Column(Float, nullable=False)
     goals = relationship("Goal")
     progress = relationship("Progress")
 
