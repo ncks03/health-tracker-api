@@ -1,24 +1,16 @@
 ### Dependencies ###
 import os
-from datetime import date
-from dotenv import load_dotenv
+
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
 from routers import customers, gyms, goals, progress
-from services.functions import run_migrations_online
-
-# Run alembic migrations
-run_migrations_online()
 
 # Load environment variables
-### DO NOT PUSH .ENV TO GIT ###
-load_dotenv()
-
-DB_USERNAME = os.getenv("DB_USERNAME") #Insert username variable name here
-DB_PASSWORD = os.getenv("DB_PASSWORD") #Insert password variable name here
 DB_URL = os.getenv("DB_URL")
 
 # Connection to postgresql Database
@@ -32,6 +24,21 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def run_migrations():
+    """
+    Run Alembic migrations.
+    """
+    # Maak een configuratie object voor alembic en laad de configuratie
+    alembic_cfg = Config("alembic.ini")
+
+    # Stel de sqlalchemy.url optie in de configuratie
+    alembic_cfg.set_main_option("sqlalchemy.url", DB_URL)
+
+    # Voer de upgrade uit
+    command.upgrade(alembic_cfg, "head")
+
+run_migrations()
 
 # API Initialisation
 app = FastAPI()
