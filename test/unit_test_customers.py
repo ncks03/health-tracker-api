@@ -91,3 +91,4 @@ async def test_get_customers():
     # Assert
     # Directly comparing the result to the mock data
     assert result == {'customers': mock_customers}
+    #nu wel goeie push?....
