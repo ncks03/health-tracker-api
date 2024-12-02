@@ -33,7 +33,6 @@ jobs:
         run: |
           pytest
 
-
       # Log in to DigitalOcean Container Registry
       - name: Log in to DigitalOcean
         env:
