@@ -133,7 +133,7 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
                         )
 
         if not current_weight:
-            current_weight = "No progress logged"
+            current_weight = 0
 
         # Convert response to response model
         response = SingleCustomerResponse(
@@ -320,6 +320,23 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
             length=customer.length,
             activity_level=customer.activity_level
         ) # Create db entity from data
+
+        user_exists = db.query(CustomerTable).filter(
+            CustomerTable.gym_id == customer.gym_id,
+            CustomerTable.first_name == customer.first_name,
+            CustomerTable.last_name == customer.last_name,
+            CustomerTable.birth_date == customer.birth_date,
+            CustomerTable.gender == customer.gender,
+            CustomerTable.length == customer.length,
+            CustomerTable.activity_level == customer.activity_level
+        ).first()
+
+        if user_exists:
+            raise HTTPException(
+                status_code=400,
+                detail=f"This user already exists!"
+            )
+
         db.add(customer) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
@@ -328,6 +345,10 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
             status_code=201,
             content={"message":f"Customer {customer.first_name} {customer.last_name} successfully added."}
         )
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         raise HTTPException(
             status_code=400,

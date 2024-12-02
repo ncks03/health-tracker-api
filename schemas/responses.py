@@ -28,7 +28,7 @@ class SingleCustomerResponse(BaseModel):
     length: PositiveInt
     weight: PositiveInt
     gym_id: PositiveInt
-    activity_level: PositiveInt
+    activity_level: PositiveFloat
 
 class GymResponse(BaseModel):
     name: str
