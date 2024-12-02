@@ -1,5 +1,18 @@
-
+import os
 from datetime import date
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+url = os.getenv("DB_URL")
+engine = create_engine(url)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Functions
 def calculate_age(born):
