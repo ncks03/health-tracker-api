@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, select, func
+from sqlalchemy import create_engine, select, func, update
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -407,11 +407,11 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 
 ### PATCH REQUESTS ###
 
+# Is deze wel nodig? waarom zou je deze gegevens willen veranderen?
 @router.patch("/{customer_id}")
-async def update_customer(customer: CustomerDTO, db = Depends(get_db)):
+async def update_customer(customer_id, customer: CustomerDTO, db = Depends(get_db)):
     try:
         customer = CustomerTable(
-            customer_id=customer.id,
             gym_id=customer.gym_id,
             first_name=customer.first_name,
             last_name=customer.last_name,
@@ -420,7 +420,20 @@ async def update_customer(customer: CustomerDTO, db = Depends(get_db)):
             length=customer.length,
             activity_level=customer.activity_level
         ) # Create db entity from data
-        db.update(CustomerTable).values(customer) # Add entity to database
+        statement = (
+            update(CustomerTable)
+            .where(CustomerTable.id == customer_id)
+            .values(
+                gym_id=customer.gym_id,
+                first_name=customer.first_name,
+                last_name=customer.last_name,
+                birth_date=customer.birth_date,
+                gender=customer.gender,
+                length=customer.length,
+                activity_level=customer.activity_level
+            )
+        )
+        db.execute(statement) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
 
