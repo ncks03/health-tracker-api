@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from pydantic import ValidationError
 from sqlalchemy import create_engine, select, func, update
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
@@ -391,14 +392,40 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
             start_date=goal.start_date,
             end_date=goal.end_date
         ) # Create db entity from data
-        db.add(goal) # Add entity to database
-        db.commit() # Commit changes
-        db.refresh(goal) # Refresh database
 
-        return JSONResponse(
-            status_code=201,
-            content={"message": f"Goal successfully added."}
+        if goal.start_date == goal.end_date:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Start date and end date cannot be the same"
+            )
+        elif goal.end_date < goal.start_date:
+            raise HTTPException(
+                status_code=400,
+                detail=f"End date cannot be before start date"
+            )
+        elif goal.end_date <= date.today():
+            raise HTTPException(
+                status_code=400,
+                detail=f"End date must be in the future"
+            )
+        else:
+            db.add(goal) # Add entity to database
+            db.commit() # Commit changes
+            db.refresh(goal) # Refresh database
+
+            return JSONResponse(
+                status_code=201,
+                content={"message": f"Goal successfully added."}
+            )
+
+    # Raise error for http exception
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
         )
+
+    # Raise other errors
     except Exception as e:
         raise HTTPException(
             status_code=400,
