@@ -9,21 +9,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
 from routers import customers, gyms, goals, progress
-
-# Load environment variables
-DB_URL = os.getenv("DB_URL")
-
-# Connection to postgresql Database
-engine = create_engine(DB_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from services.functions import get_db
 
 # API Initialisation
 app = FastAPI()

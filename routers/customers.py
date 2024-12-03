@@ -14,24 +14,6 @@ from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
 from services.functions import get_db
 
-# Load environment variables
-### DO NOT PUSH .ENV TO GIT ###
-load_dotenv()
-
-# DB_URL = os.getenv("DB_URL")
-
-# # Connection to postgresql Database
-# engine = create_engine(DB_URL)
-
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
 # Define router endpoint
 router = APIRouter(
     prefix="/customers",
