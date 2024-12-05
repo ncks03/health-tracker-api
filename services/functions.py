@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-url = os.getenv("DB_URL")
+url = os.getenv("DB_URL", "sqlite:///:memory:?check_same_thread=False")
 engine = create_engine(url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

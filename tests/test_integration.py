@@ -31,13 +31,11 @@ import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
-from services.functions import get_db
+# from services.functions import get_db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from models.entities import Base, Customer
-
-load_dotenv()
 
 # Create a single engine for the entire test session
 url = os.getenv("TEST_DB_URL")
@@ -47,6 +45,13 @@ test_engine = create_engine(
     poolclass=StaticPool  # Ensures the same connection is used
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+def get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
 
 # Create tables once before tests
 Base.metadata.create_all(bind=test_engine)
@@ -59,9 +64,11 @@ def override_get_db():
         db.close()
 
 # Override the database dependency for tests
-app.dependency_overrides[get_db] = override_get_db
+# app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
+
+client.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="function")
 def db():
