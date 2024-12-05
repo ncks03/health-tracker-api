@@ -37,10 +37,12 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from models.entities import Base, Customer
 
+load_dotenv()
+
 # Create a single engine for the entire test session
-url = os.getenv("TEST_DB_URL")
+test_url = os.getenv("TEST_DB_URL")
 test_engine = create_engine(
-    url,
+    test_url,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool  # Ensures the same connection is used
 )
