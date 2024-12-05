@@ -26,7 +26,7 @@ class SingleCustomerResponse(BaseModel):
     birth_date: PastDate
     gender: str
     length: PositiveInt
-    weight: PositiveInt
+    weight: int
     gym_id: PositiveInt
     activity_level: PositiveFloat
 
@@ -47,7 +47,7 @@ class CustomerGoalResponse(BaseModel):
     id: int
     weight_goal: PositiveInt
     start_date: date
-    end_date: FutureDate
+    end_date: date
 
 class GoalResponse(BaseModel):
     id: int
