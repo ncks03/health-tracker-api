@@ -40,9 +40,9 @@ from models.entities import Base, Customer
 load_dotenv()
 
 # Create a single engine for the entire test session
-TEST_DB_URL = os.getenv("TEST_DB_URL")
+url = os.getenv("TEST_DB_URL")
 test_engine = create_engine(
-    TEST_DB_URL,
+    url,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool  # Ensures the same connection is used
 )
