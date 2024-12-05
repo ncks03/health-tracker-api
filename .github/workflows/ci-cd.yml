@@ -31,6 +31,7 @@ jobs:
           # If you're using environment-specific configurations
           PYTHONPATH: .  # Ensures imports work correctly
           # You can add other environment variables here if needed
+          TEST_DB_URL: "sqlite:///:memory:?check_same_thread=False"
         run: |
           pytest -v --capture=no  # Verbose mode, show print statements
 
