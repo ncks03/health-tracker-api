@@ -31,6 +31,7 @@ import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
+from schemas.responses import SingleCustomerResponse
 from services.functions import get_db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -77,24 +78,26 @@ def db():
         transaction.rollback()
         connection.close()
 
-def populate_db():
-    test_customers = [
-        {
-            "first_name":'John', "last_name":'Doe', "gender":'M',
-            "birth_date":"1990-01-01", "length":180,
-            "gym_id":1, "activity_level":10.0
-        },
-        {
-            "first_name":'Alice', "last_name":'Cooper', "gender":'V',
-            "birth_date":"2001-01-01", "length":165,
-            "gym_id":1, "activity_level":5.7
-        }
-    ]
-    try:
-        for customer in test_customers:
-            client.post("/customers", json=customer)
-    except Exception as e:
-        print(e)
+# def populate_db():
+#     test_customers = [
+#         {
+#             "first_name":'John', "last_name":'Doe', "gender":'M',
+#             "birth_date":"1990-01-01", "length":180,
+#             "gym_id":1, "activity_level":10.0
+#         },
+#         {
+#             "first_name":'Alice', "last_name":'Cooper', "gender":'V',
+#             "birth_date":"2001-01-01", "length":165,
+#             "gym_id":1, "activity_level":5.7
+#         }
+#     ]
+#     try:
+#         for customer in test_customers:
+#             client.post("/customers", json=customer)
+#     except Exception as e:
+#         print(e)
+#
+#     return test_customers
 
 
 @pytest.mark.asyncio
@@ -124,3 +127,19 @@ async def test_create_user(db: Session):
         print("Customer not found in DB.")
 
     assert customer_in_db is not None  # Ensure the customer was added
+
+@pytest.mark.asyncio
+async def test_get_user_empty(db: Session):
+
+    response = client.get("/customers/1")
+    assert response.status_code == 200
+    assert response.json()["data"]["id"] == 1
+
+@pytest.mark.asyncio
+async def test_get_user(db: Session):
+    # test_customers = populate_db()
+
+    response = client.get("/customers/1")
+    assert response.status_code == 200
+    assert response.json()["data"]["id"] == 1
+
