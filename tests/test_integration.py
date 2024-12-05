@@ -26,8 +26,9 @@
 #     assert response.json() == {}
 
 # i
-
+import os
 import pytest
+from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
 from services.functions import get_db
@@ -36,8 +37,10 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from models.entities import Base, Customer
 
+load_dotenv()
+
 # Create a single engine for the entire test session
-TEST_DB_URL = "sqlite:///:memory:?check_same_thread=False"
+TEST_DB_URL = os.getenv("TEST_DB_URL")
 test_engine = create_engine(
     TEST_DB_URL,
     connect_args={"check_same_thread": False},
