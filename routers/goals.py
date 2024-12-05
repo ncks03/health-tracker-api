@@ -7,30 +7,10 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException, Query
 from starlette.responses import JSONResponse
 
-from schemas.dtos import GoalDTO
 from schemas.responses import GoalResponse
 from models.entities import Goal as GoalsTable
 from models.entities import Customer as CustomerTable
-
-# Load environment variables
-### DO NOT PUSH .ENV TO GIT ###
-load_dotenv()
-
-DB_USERNAME = os.getenv("DB_USERNAME") #Insert username variable name here
-DB_PASSWORD = os.getenv("DB_PASSWORD") #Insert password variable name here
-DB_URL = os.getenv("DB_URL")
-
-# Connection to postgresql Database
-engine = create_engine(DB_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from services.functions import get_db
 
 router = APIRouter(
     prefix="/goals",
@@ -70,7 +50,7 @@ async def read_goals(
         if not result:
             raise HTTPException(
                 status_code=404,
-                detail="No goals found matching the given criteria."
+                detail="No goals found (matching the given criteria)."
             )
 
         # Format the response data
@@ -89,12 +69,23 @@ async def read_goals(
         # Return the formatted response
         return response
 
+    except HTTPException as e:
+        # Re-raise HTTPExceptions, no wrapping needed
+        raise e
+
     except Exception as e:
-        # Raise a detailed HTTP exception
+        # Handle any other exceptions as 500 error
         raise HTTPException(
             status_code=500,
             detail=f"Could not fetch goals: {e}"
         )
+
+    # except Exception as e:
+    #     # Raise a detailed HTTP exception
+    #     raise HTTPException(
+    #         status_code=500,
+    #         detail=f"Could not fetch goals: {e}"
+    #     )
 
 @router.get("/{goals_id}", response_model=GoalResponse)
 async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
@@ -140,4 +131,22 @@ async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
         raise HTTPException(
             status_code=500,
             detail=f"Could not retrieve goal: {e}"
+        )
+
+@router.delete("/{goal_id}")
+async def delete_goal(goal_id: int, db = Depends(get_db)):
+    try:
+        goal = db.query(GoalsTable).filter(GoalsTable.id == goal_id).first()
+
+        db.delete(goal)
+        db.commit()
+        return JSONResponse(
+            status_code=200,
+            content={"message": f"Goal with id {goal_id} successfully deleted."}
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
         )

@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from schemas.dtos import ProgressDTO
-from models.entities import Gym, Progress, Customer
+from models.entities import Gym, Progress
 
 # Load environment variables
 ### DO NOT PUSH .ENV TO GIT ###
@@ -49,9 +49,7 @@ async def read_progress(db = Depends(get_db)):
 async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
     try:
         progress = db.query(Progress).filter(Progress.id == progress_id).first()
-        customer = db.query(Customer).filter(Customer.id == progress.customer_id).first()
         if progress:
-            progress.customer = f"{customer.first_name} {customer.last_name}"
             return progress
         else:
             raise HTTPException(status_code=404, detail=f"No progress found with id {progress_id}")

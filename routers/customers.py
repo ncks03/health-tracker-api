@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, select, func
+from pydantic import ValidationError
+from sqlalchemy import create_engine, select, func, update
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -12,24 +13,7 @@ from schemas.responses import CustomerResponse, CustomerProgressResponse, Custom
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
-
-# Load environment variables
-### DO NOT PUSH .ENV TO GIT ###
-load_dotenv()
-
-DB_URL = os.getenv("DB_URL")
-
-# Connection to postgresql Database
-engine = create_engine(DB_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from services.functions import get_db
 
 # Define router endpoint
 router = APIRouter(
@@ -320,6 +304,23 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
             length=customer.length,
             activity_level=customer.activity_level
         ) # Create db entity from data
+
+        user_exists = db.query(CustomerTable).filter(
+            CustomerTable.gym_id == customer.gym_id,
+            CustomerTable.first_name == customer.first_name,
+            CustomerTable.last_name == customer.last_name,
+            CustomerTable.birth_date == customer.birth_date,
+            CustomerTable.gender == customer.gender,
+            CustomerTable.length == customer.length,
+            CustomerTable.activity_level == customer.activity_level
+        ).first()
+
+        if user_exists:
+            raise HTTPException(
+                status_code=400,
+                detail=f"This user already exists!"
+            )
+
         db.add(customer) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
@@ -328,6 +329,10 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
             status_code=201,
             content={"message":f"Customer {customer.first_name} {customer.last_name} successfully added."}
         )
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -370,14 +375,40 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
             start_date=goal.start_date,
             end_date=goal.end_date
         ) # Create db entity from data
-        db.add(goal) # Add entity to database
-        db.commit() # Commit changes
-        db.refresh(goal) # Refresh database
 
-        return JSONResponse(
-            status_code=201,
-            content={"message": f"Goal successfully added."}
+        if goal.start_date == goal.end_date:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Start date and end date cannot be the same"
+            )
+        elif goal.end_date < goal.start_date:
+            raise HTTPException(
+                status_code=400,
+                detail=f"End date cannot be before start date"
+            )
+        elif goal.end_date <= date.today():
+            raise HTTPException(
+                status_code=400,
+                detail=f"End date must be in the future"
+            )
+        else:
+            db.add(goal) # Add entity to database
+            db.commit() # Commit changes
+            db.refresh(goal) # Refresh database
+
+            return JSONResponse(
+                status_code=201,
+                content={"message": f"Goal successfully added."}
+            )
+
+    # Raise error for http exception
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An error occurred: {e}"
         )
+
+    # Raise other errors
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -386,11 +417,11 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 
 ### PATCH REQUESTS ###
 
+# Is deze wel nodig? waarom zou je deze gegevens willen veranderen?
 @router.patch("/{customer_id}")
-async def update_customer(customer: CustomerDTO, db = Depends(get_db)):
+async def update_customer(customer_id, customer: CustomerDTO, db = Depends(get_db)):
     try:
         customer = CustomerTable(
-            customer_id=customer.id,
             gym_id=customer.gym_id,
             first_name=customer.first_name,
             last_name=customer.last_name,
@@ -399,7 +430,20 @@ async def update_customer(customer: CustomerDTO, db = Depends(get_db)):
             length=customer.length,
             activity_level=customer.activity_level
         ) # Create db entity from data
-        db.update(CustomerTable).values(customer) # Add entity to database
+        statement = (
+            update(CustomerTable)
+            .where(CustomerTable.id == customer_id)
+            .values(
+                gym_id=customer.gym_id,
+                first_name=customer.first_name,
+                last_name=customer.last_name,
+                birth_date=customer.birth_date,
+                gender=customer.gender,
+                length=customer.length,
+                activity_level=customer.activity_level
+            )
+        )
+        db.execute(statement) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
 
