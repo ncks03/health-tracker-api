@@ -476,3 +476,7 @@ async def delete_customer(customer_id: int, db = Depends(get_db)):
             status_code=400,
             detail=f"An error occurred: {e}"
         )
+
+@router.get("/{customer_id}/dailyCalorieIntake")
+async def get_calorie_intake_per_user(customer_id: int, db = Depends(get_db)):
+    pass
