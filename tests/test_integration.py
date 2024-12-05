@@ -27,16 +27,18 @@
 
 # i
 import os
+from datetime import datetime, date, timedelta
+
 import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
-from schemas.responses import SingleCustomerResponse
+from schemas.dtos import CustomerDTO
 from services.functions import get_db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
-from models.entities import Base, Customer
+from models.entities import Base, Customer, Gym, Goal, Progress
 
 load_dotenv()
 
@@ -78,27 +80,70 @@ def db():
         transaction.rollback()
         connection.close()
 
-# def populate_db():
-#     test_customers = [
-#         {
-#             "first_name":'John', "last_name":'Doe', "gender":'M',
-#             "birth_date":"1990-01-01", "length":180,
-#             "gym_id":1, "activity_level":10.0
-#         },
-#         {
-#             "first_name":'Alice', "last_name":'Cooper', "gender":'V',
-#             "birth_date":"2001-01-01", "length":165,
-#             "gym_id":1, "activity_level":5.7
-#         }
-#     ]
-#     try:
-#         for customer in test_customers:
-#             client.post("/customers", json=customer)
-#     except Exception as e:
-#         print(e)
-#
-#     return test_customers
+def fill_tables(db: Session):
+    Base.metadata.create_all(bind=test_engine)
+    # Add gyms
+    test_gyms = [
+        Gym(name="Big Gym", address_place="Zwolle"),
+        Gym(name="Profit", address_place="Nijmegen")
+    ]
 
+    for gym in test_gyms:
+        db.add(gym)
+        db.commit()
+        db.refresh(gym)
+
+    # Add customers
+    test_customers = [
+        Customer(
+            first_name='John', last_name='Doe', gender='male',
+            birth_date=datetime(1990, 1, 1).date(), length=180,
+            gym_id=1, activity_level=10.0
+        ),
+        Customer(
+            first_name='Jane', last_name='Smith', gender='female',
+            birth_date=datetime(1985, 5, 15).date(), length=165,
+            gym_id=2, activity_level=9.3
+        )
+    ]
+
+    for customer in test_customers:
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+
+    # Add goals
+    test_goals = [
+        Goal(customer_id=1,
+             weight_goal=70,
+             start_date=date.today() - timedelta(days=15),
+             end_date=date.today() - timedelta(days=1)),
+        Goal(customer_id=2,
+             weight_goal=60,
+             start_date=date.today() - timedelta(days=28),
+             end_date=date.today() - timedelta(days=14))
+    ]
+
+    for goal in test_goals:
+        db.add(goal)
+        db.commit()
+        db.refresh(goal)
+
+    # Add progress
+    test_progress = [
+        Progress(customer_id=1, weight=80,
+                 date=date.today() - timedelta(days=270)),
+        Progress(customer_id=2, weight=50,
+                 date=date.today() - timedelta(days=365))
+    ]
+
+    for progress in test_progress:
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+
+def drop_tables():
+    Base.metadata.drop_all(bind=test_engine)
 
 @pytest.mark.asyncio
 async def test_create_user(db: Session):
@@ -129,17 +174,12 @@ async def test_create_user(db: Session):
     assert customer_in_db is not None  # Ensure the customer was added
 
 @pytest.mark.asyncio
-async def test_get_user_empty(db: Session):
-
-    response = client.get("/customers/1")
-    assert response.status_code == 200
-    assert response.json()["data"]["id"] == 1
-
-@pytest.mark.asyncio
 async def test_get_user(db: Session):
-    # test_customers = populate_db()
+    fill_tables(db)
 
     response = client.get("/customers/1")
     assert response.status_code == 200
     assert response.json()["data"]["id"] == 1
+
+    drop_tables()
 
