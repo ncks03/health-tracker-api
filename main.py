@@ -1,15 +1,12 @@
 ### Dependencies ###
 import os
 
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 ### Imports ###
 from routers import customers, gyms, goals, progress
-from services.functions import get_db
 
 # API Initialisation
 app = FastAPI()
