@@ -131,4 +131,4 @@ async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
         return customers
 
     except Exception as e: #Raise exception for invalid ids
-        raise HTTPException()
+        raise e
