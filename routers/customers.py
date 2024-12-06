@@ -1,9 +1,6 @@
-import os
-from dotenv import load_dotenv
-from pydantic import ValidationError
-from sqlalchemy import create_engine, select, func, update
+
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional
