@@ -21,7 +21,7 @@ async def get_gyms(address_place: Optional[str] = None, db = Depends(get_db)):
             # check if the gyms table in database has rows
             if all_gyms:
                 # make an array of gyms with certain structure
-                gyms_strucured = {"gyms":[
+                gyms_structured = {"gyms":[
                     GymResponse(
                         id=gym.id,
                         name=gym.name,
@@ -30,7 +30,7 @@ async def get_gyms(address_place: Optional[str] = None, db = Depends(get_db)):
                     for gym in all_gyms
                 ]}
 
-                return gyms_strucured
+                return gyms_structured
             # if gyms db is empty
             else:
                 raise HTTPException(status_code=404, detail="there are no Gyms registered in database")
@@ -48,11 +48,12 @@ async def get_gyms(address_place: Optional[str] = None, db = Depends(get_db)):
                 address_place=gym.address_place
             ) for gym in gyms]
 
-    except Exception as e: #Raise exception for invalid ids
-        raise HTTPException(
-            status_code=404,
-            detail=f"An error occurred: {e}"
-        )
+    except HTTPException as e:
+        raise e
+
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"unexpected error!")
+
 @router.post("/")
 async def create_gym(gym: GymDTO, db = Depends(get_db)):
     try:
@@ -75,8 +76,11 @@ async def create_gym(gym: GymDTO, db = Depends(get_db)):
             status_code=201,
             content={"maessage": f"Gyms '{gym.name}' is successfully registered!"}
         )
-    except Exception as e: #Raise exception for invalid ids
+    except HTTPException as e:
         raise e
+
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"unexpected error!")
 
 @router.get("/{gym_id}")
 async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
@@ -91,11 +95,11 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
             name=gym.name,
             address_place=gym.address_place
         )
-    except Exception as e: #Raise exception for invalid ids
-        raise HTTPException(
-            status_code=404,
-            detail=f"An error occurred: {e}"
-        )
+    except HTTPException as e:
+        raise e
+
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"unexpected error!")
 
 @router.delete("/{gym_id}")
 async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
@@ -110,11 +114,11 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
         return {"message": f"Gym with id '{gym_id}' successfully deleted"}
 
     # Only catch SQLAlchemy errors here
-    except Exception as e: #Raise exception for invalid ids
-        raise HTTPException(
-            status_code=404,
-            detail=f"An error occurred: {e}"
-        )
+    except HTTPException as e: #Raise exception for invalid ids
+        raise e
+
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"unexpected error!")
 
 @router.get("/{gym_id}/customers")
 async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
@@ -130,5 +134,8 @@ async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
 
         return customers
 
-    except Exception as e: #Raise exception for invalid ids
+    except HTTPException as e: #Raise exception for invalid ids
         raise e
+
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"unexpected error!")
