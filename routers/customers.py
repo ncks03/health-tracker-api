@@ -1,8 +1,6 @@
-import os
-from dotenv import load_dotenv
-from pydantic import ValidationError
-from sqlalchemy import create_engine, select, func, update
-from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy import select, update
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional
@@ -351,14 +349,30 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
             date=date.today(),
             weight=progress.weight
         ) # Create db entity from data
-        db.add(progress) # Add entity to database
-        db.commit() # Commit changes
-        db.refresh(progress) # Refresh database
+
+        if progress.weight <= 0:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Weight must be greater than 0."
+            )
+        else:
+            db.add(progress) # Add entity to database
+            db.commit() # Commit changes
+            db.refresh(progress) # Refresh database
 
         return JSONResponse(
             status_code=201,
             content={"message": f"Progress successfully saved."}
         )
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"An error occurred: {e}"
+        )
+
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
         raise HTTPException(
@@ -422,27 +436,21 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 async def update_customer(customer_id, customer: CustomerDTO, db = Depends(get_db)):
     try:
         customer = CustomerTable(
-            gym_id=customer.gym_id,
-            first_name=customer.first_name,
-            last_name=customer.last_name,
-            birth_date=customer.birth_date,
-            gender=customer.gender,
-            length=customer.length,
-            activity_level=customer.activity_level
+            gym_id=customer.gym_id if customer.gym_id else None,
+            first_name=customer.first_name if customer.first_name else None,
+            last_name=customer.last_name if customer.last_name else None,
+            birth_date=customer.birth_date if customer.birth_date else None,
+            gender=customer.gender if customer.gender else None,
+            length=customer.length if customer.length else None,
+            activity_level=customer.activity_level if customer.activity_level else None
         ) # Create db entity from data
+
         statement = (
             update(CustomerTable)
             .where(CustomerTable.id == customer_id)
-            .values(
-                gym_id=customer.gym_id,
-                first_name=customer.first_name,
-                last_name=customer.last_name,
-                birth_date=customer.birth_date,
-                gender=customer.gender,
-                length=customer.length,
-                activity_level=customer.activity_level
-            )
+            .values(customer)
         )
+
         db.execute(statement) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
@@ -476,7 +484,3 @@ async def delete_customer(customer_id: int, db = Depends(get_db)):
             status_code=400,
             detail=f"An error occurred: {e}"
         )
-
-@router.get("/{customer_id}/dailyCalorieIntake")
-async def get_calorie_intake_per_user(customer_id: int, db = Depends(get_db)):
-    pass

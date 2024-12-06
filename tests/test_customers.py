@@ -4,12 +4,13 @@ import pytest
 from unittest.mock import MagicMock
 
 from fastapi import HTTPException
+from pydantic.v1 import NoneBytes
 
 from routers.customers import read_customer_by_name, read_customer_by_id, get_daily_calorie_intake, create_user, \
-    create_goal_for_user
-from schemas.dtos import CustomerDTO, GoalDTO
-from schemas.responses import CustomerResponse, SingleCustomerResponse
-from models.entities import Customer as CustomerTable, Goal
+    create_goal_for_user, read_customer_progress, create_progress_for_user
+from schemas.dtos import CustomerDTO, GoalDTO, ProgressDTO
+from schemas.responses import CustomerResponse, SingleCustomerResponse, ProgressResponse, CustomerProgressResponse
+from models.entities import Customer as CustomerTable, Goal, Progress
 from datetime import timedelta, datetime, date
 
 
@@ -242,6 +243,81 @@ async def test_create_goal_wrong_end_date():
 
     assert result.value.status_code == 400
     assert result.value.detail == "An error occurred: 400: End date cannot be before start date"
+
+# Get progress test
+@pytest.mark.asyncio
+async def test_get_user_progress():
+    mock_db = MagicMock()
+    mock_progress = [Progress(
+        id = 1,
+        customer_id = 1,
+        date = date.today() - timedelta(days=14),
+        weight = 100
+    )]
+
+    mock_progress_response = CustomerProgressResponse(
+        date = date.today() - timedelta(days=14),
+        weight = 100
+    )
+
+    mock_db.execute.return_value.scalars.return_value.all.return_value = mock_progress
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
+
+    result = await read_customer_progress(customer_id=1, db=mock_db)
+
+    assert result == {
+                "customer_id": 1,
+                "customer_name": mock_customers[0].first_name + " " + mock_customers[0].last_name,
+                "progress": [mock_progress_response]
+            }
+
+# Test post progress
+@pytest.mark.asyncio
+async def test_post_user_progress():
+    mock_db = MagicMock()
+    mock_progress = ProgressDTO(
+        weight = 100
+    )
+
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
+
+    result = await create_progress_for_user(customer_id=1, progress=mock_progress, db = mock_db)
+
+    mock_db.add.assert_called_once()
+    mock_db.commit.assert_called_once()
+    mock_db.refresh.assert_called_once()
+
+    assert result.status_code == 201
+
+@pytest.mark.asyncio
+async def test_post_user_progress_no_customer():
+    mock_db = MagicMock()
+    mock_progress = ProgressDTO(
+        weight = 100
+    )
+
+    mock_db.query.return_value.filter.return_value.first.return_value = None
+
+    with pytest.raises(HTTPException) as result:
+        await create_progress_for_user(customer_id=5, progress=mock_progress, db = mock_db)
+
+    assert result.value.status_code == 404
+    assert result.value.detail == "No customer with id 5"
+
+@pytest.mark.asyncio
+async def test_post_user_progress_negative_weight():
+    mock_db = MagicMock()
+    mock_progress = Progress(
+        weight=-100
+    )
+
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
+
+    with pytest.raises(HTTPException) as result:
+        await create_progress_for_user(customer_id=1, progress=mock_progress, db = mock_db)
+
+    assert result.value.status_code == 422
+    assert result.value.detail == "Weight must be greater than 0."
 
 # test algorithm/ daily calorie intake
 @pytest.mark.asyncio
