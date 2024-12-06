@@ -31,6 +31,7 @@ class SingleCustomerResponse(BaseModel):
     activity_level: PositiveFloat
 
 class GymResponse(BaseModel):
+    id: int
     name: str
     address_place: str
 
