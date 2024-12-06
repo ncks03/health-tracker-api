@@ -78,4 +78,4 @@ jobs:
         env:
           COMMIT_HASH: ${{ github.sha }}
         run: |
-          kubectl set image deployment/website website=registry.digitalocean.com/devops-api/health-api:${COMMIT_HASH} -n ns-website-db
+          kubectl set image deployment/website website=registry.digitalocean.com/devops-api/health-api:${COMMIT_HASH} -n health-app-ns

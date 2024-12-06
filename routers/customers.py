@@ -1,17 +1,18 @@
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, bindparam
+from sqlalchemy.dialects.postgresql import psycopg2
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional
 from datetime import date
 
-from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
+from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO, CustomerUpdateDTO
 from schemas.responses import CustomerResponse, CustomerProgressResponse, CustomerGoalResponse, SingleCustomerResponse
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
-from services.functions import get_db
+from services.functions import get_db, violates_constraint
 
 # Define router endpoint
 router = APIRouter(
@@ -319,6 +320,13 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
                 detail=f"This user already exists!"
             )
 
+        if customer.activity_level:
+            if violates_constraint(customer.activity_level):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"The activity level must be between 1.2 and 1.725."
+                )
+
         db.add(customer) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
@@ -433,32 +441,45 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 
 # Is deze wel nodig? waarom zou je deze gegevens willen veranderen?
 @router.patch("/{customer_id}")
-async def update_customer(customer_id, customer: CustomerDTO, db = Depends(get_db)):
+async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get_db)):
     try:
-        customer = CustomerTable(
-            gym_id=customer.gym_id if customer.gym_id else None,
-            first_name=customer.first_name if customer.first_name else None,
-            last_name=customer.last_name if customer.last_name else None,
-            birth_date=customer.birth_date if customer.birth_date else None,
-            gender=customer.gender if customer.gender else None,
-            length=customer.length if customer.length else None,
-            activity_level=customer.activity_level if customer.activity_level else None
-        ) # Create db entity from data
+        customer = db.query(CustomerTable).filter(CustomerTable.id==customer_id).first()
 
-        statement = (
-            update(CustomerTable)
-            .where(CustomerTable.id == customer_id)
-            .values(customer)
-        )
+        if not customer:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No customer with id {customer_id}"
+            )
 
-        db.execute(statement) # Add entity to database
+        if data.activity_level:
+            if violates_constraint(data.activity_level):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"The activity level must be between 1.2 and 1.725."
+                )
+
+        customer_dict = data.dict(exclude_unset=True)
+
+        for key, value in customer_dict.items():
+            setattr(customer, key, value)
+
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
 
         return JSONResponse(
             status_code=201,
-            content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
+            content={"message":f"Customer successfully updated."}
         )
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"An error occurred: {e}"
+        )
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         raise HTTPException(
             status_code=400,

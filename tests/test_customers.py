@@ -18,27 +18,27 @@ mock_customers = [
     CustomerTable(
         id=1, first_name='John', last_name='Doe', gender='male',
         birth_date=datetime(1990, 1, 1).date(), length=180,
-        gym_id=1, activity_level=10.0
+        gym_id=1, activity_level=1.4
     ),
     CustomerTable(
         id=2, first_name='Jane', last_name='Smith', gender='female',
         birth_date=datetime(1985, 5, 15).date(), length=165,
-        gym_id=1, activity_level=9.3
+        gym_id=1, activity_level=1.3
     ),
     CustomerTable(
         id=3, first_name='Alice', last_name='Johnson', gender='female',
         birth_date=datetime(2000, 8, 25).date(), length=170,
-        gym_id=1, activity_level=5.5
+        gym_id=1, activity_level=1.5
     ),
     CustomerTable(
         id=4, first_name='Bob', last_name='Brown', gender='male',
         birth_date=datetime(1995, 12, 30).date(), length=175,
-        gym_id=1, activity_level=2.3
+        gym_id=1, activity_level=1.3
     ),
     CustomerTable(
         id=5, first_name='Charlie', last_name='Davis', gender='male',
         birth_date=datetime(1988, 3, 10).date(), length=182,
-        gym_id=1, activity_level=7.3
+        gym_id=1, activity_level=1.3
     )
 ]
 
@@ -47,34 +47,34 @@ mock_customer_responses = [
     CustomerResponse(
         id=1, first_name='John', last_name='Doe', gender='male',
         birth_date=datetime(1990, 1, 1).date(), length=180,
-        gym_id=1, activity_level=10.0
+        gym_id=1, activity_level=1.4
     ),
     CustomerResponse(
         id=2, first_name='Jane', last_name='Smith', gender='female',
         birth_date=datetime(1985, 5, 15).date(), length=165,
-        gym_id=1, activity_level=9.3
+        gym_id=1, activity_level=1.3
     ),
     CustomerResponse(
         id=3, first_name='Alice', last_name='Johnson', gender='female',
         birth_date=datetime(2000, 8, 25).date(), length=170,
-        gym_id=1, activity_level=5.5
+        gym_id=1, activity_level=1.5
     ),
     CustomerResponse(
         id=4, first_name='Bob', last_name='Brown', gender='male',
         birth_date=datetime(1995, 12, 30).date(), length=175,
-        gym_id=1, activity_level=2.3
+        gym_id=1, activity_level=1.3
     ),
     CustomerResponse(
         id=5, first_name='Charlie', last_name='Davis', gender='male',
         birth_date=datetime(1988, 3, 10).date(), length=182,
-        gym_id=1, activity_level=7.3
+        gym_id=1, activity_level=1.3
     )
 ]
 
 mock_single_customer = SingleCustomerResponse(
 id=1, first_name='John', last_name='Doe', gender='male',
         birth_date=datetime(1990, 1, 1).date(), length=180, weight=80,
-        gym_id=1, activity_level=10.0
+        gym_id=1, activity_level=1.4
 )
 
 # Test get requests
@@ -131,7 +131,7 @@ async def test_create_user():
     mock_customer = CustomerDTO(
         first_name='John', last_name='Doe', gender='male',
         birth_date=datetime(1990, 1, 1).date(), length=180,
-        gym_id=1, activity_level=10.0
+        gym_id=1, activity_level=1.4
     )
 
     mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -156,7 +156,7 @@ async def test_create_user_exists():
     mock_customer = CustomerDTO(
         first_name='John', last_name='Doe', gender='male',
         birth_date=datetime(1990, 1, 1).date(), length=180,
-        gym_id=1, activity_level=10.0
+        gym_id=1, activity_level=1.4
     )
 
     mock_db.query.return_value.filter.return_value.first.return_value = mock_customer
@@ -167,6 +167,27 @@ async def test_create_user_exists():
 
     assert result.value.status_code == 400
     assert result.value.detail == "This user already exists!"
+
+@pytest.mark.asyncio
+async def test_create_user_violate_constraints():
+    """
+    Test creating user
+    """
+    #Arrange
+    mock_db = MagicMock()
+    mock_customer = CustomerDTO(
+        first_name='John', last_name='Doe', gender='male',
+        birth_date=datetime(1990, 1, 1).date(), length=180,
+        gym_id=1, activity_level=3.1
+    )
+
+    mock_db.query.return_value.filter.return_value.first.return_value = None
+
+    with pytest.raises(HTTPException) as result:
+        await create_user(mock_customer, db=mock_db)
+
+    assert result.value.status_code == 422
+    assert result.value.detail == "The activity level must be between 1.2 and 1.725."
 
 # test post goals
 @pytest.mark.asyncio
