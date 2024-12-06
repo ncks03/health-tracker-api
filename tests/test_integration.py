@@ -162,7 +162,7 @@ async def test_create_customer(db: Session):
 
 @pytest.mark.asyncio
 async def test_create_customer_bad_request(db: Session):
-    """It should Create a new Customer"""
+    """It should not Create a new Customer with a bad request"""
     create_tables(db)
 
     new_customer = {
@@ -286,6 +286,28 @@ async def test_create_goal(db: Session):
     drop_tables()
 
 @pytest.mark.asyncio
+async def test_create_goal_bad_request(db: Session):
+    """It should not Create a new Goal with a bad request"""
+    create_tables(db)
+
+    new_goal = {
+        "start_date": 2999, "end_date": 3000, "customer_id":  "1", "weight_goal": "100", # this is the wrong order and wrong types
+    }
+
+    # Perform the POST request using TestClient
+    customer_id = new_goal["customer_id"]
+    result = client.post(f"customers/{customer_id}/goals", json=new_goal)
+
+    # Print diagnostic information
+    print("Response status code:", result.status_code)
+    print("Response data:", result.json())
+
+    # Assert that the status code is 422 (unprocessable entity)
+    assert result.status_code == 422
+
+    drop_tables()
+
+@pytest.mark.asyncio
 async def test_get_goal(db: Session):
     """It should get a single goal."""
     create_tables(db)
@@ -368,6 +390,28 @@ async def test_create_gym(db: Session):
 
     drop_tables()
 
+
+@pytest.mark.asyncio
+async def test_create_gym_bad_request(db: Session):
+    """It should not Create a new Gym if the request is bad"""
+    create_tables(db)
+
+    new_gym = {
+        "name": 100, "address_place": "New York"
+    }
+
+    # Perform the POST request using TestClient
+    result = client.post("/gyms", json=new_gym)
+
+    # Print diagnostic information
+    print("Response status code:", result.status_code)
+    print("Response data:", result.json())
+
+    # Assert that the status code is 422 (unprocessable entity)
+    assert result.status_code == 422
+
+    drop_tables()
+
 @pytest.mark.asyncio
 async def test_get_gym(db: Session):
     """It should get a single gym."""
@@ -413,4 +457,8 @@ async def test_delete_gym(db: Session):
     assert gym_after is None  # Ensure the gym was deleted
 
     drop_tables()
+
+##########################################################################
+#  G Y M S  T E S T   C A S E S
+##########################################################################
 
