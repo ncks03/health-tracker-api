@@ -1,6 +1,7 @@
-from sqlalchemy.exc import SQLAlchemyError
+from typing import Optional
+
 from fastapi import Depends, APIRouter, HTTPException
-from models.entities import Progress
+from models.entities import Progress, Customer
 from schemas.responses import ProgressResponse
 from services.functions import get_db
 
@@ -18,6 +19,7 @@ async def get_progress(db = Depends(get_db)):
 
         return [
             ProgressResponse(
+                id=progress.id,
                 customer_id=progress.customer_id,
                 date=progress.date,
                 weight=progress.weight
@@ -27,7 +29,7 @@ async def get_progress(db = Depends(get_db)):
     except HTTPException as e:
         raise e
 
-    except Exception:
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"unexpected error!")
 
 @router.get("/{progress_id}")
@@ -35,9 +37,10 @@ async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
     try:
         progress = db.query(Progress).filter(Progress.id == progress_id).first()
         if not progress:
-            raise HTTPException(status_code=404, detail=f"No progress found with id {progress_id}")
+            raise HTTPException(status_code=404, detail=f"No progress found with id '{progress_id}'")
 
         return ProgressResponse(
+            id=progress.id,
             customer_id=progress.customer_id,
             date=progress.date,
             weight=progress.weight
