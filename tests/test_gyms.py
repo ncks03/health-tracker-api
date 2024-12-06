@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from routers.gyms import read_gyms
+from routers.gyms import get_gyms
 from schemas.responses import GymResponse
 
 # Sample mock data for GymResponse
@@ -17,7 +17,7 @@ async def test_read_gyms():
     mock_db.query.return_value.all.return_value = mock_gyms
 
     # Act
-    result = await read_gyms(db=mock_db)
+    result = await get_gyms(db=mock_db)
 
     # Assert
     # Ensure the result is correctly formatted
