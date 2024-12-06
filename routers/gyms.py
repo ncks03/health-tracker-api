@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 from schemas.dtos import GymDTO
 from models.entities import Gym, Customer
-from schemas.responses import GymResponse
+from schemas.responses import GymResponse, CustomerResponse
 from services.functions import get_db
 
 router = APIRouter(
@@ -111,7 +111,10 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
 
         db.delete(gym)
         db.commit()
-        return {"message": f"Gym with id '{gym_id}' successfully deleted"}
+        return JSONResponse(
+            status_code=200,
+            content={"message": f"Gym with id '{gym_id}' successfully deleted."}
+        )
 
     # Only catch SQLAlchemy errors here
     except HTTPException as e: #Raise exception for invalid ids
@@ -125,14 +128,28 @@ async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
     try:
         gym = db.query(Gym).filter(Gym.id == gym_id).first()
         if not gym:
-            raise HTTPException(status_code=404, detail=f"Gym with id '{gym_id}' not found")
+            raise HTTPException(status_code=404, detail=f"Gym with id '{gym_id}' does not exist")
 
         customers = db.query(Customer).filter(Customer.gym_id == gym_id).all()
         # check if the customers variable empty
         if not customers:
             raise HTTPException(status_code=404, detail=f"Gym with id {gym_id} has no customers")
 
-        return customers
+        return {
+            "gym": gym.name,
+            "customers": [
+                CustomerResponse(
+                    id=customer.id,
+                    first_name=customer.first_name,
+                    last_name=customer.last_name,
+                    birth_date=customer.birth_date,
+                    gender=customer.gender,
+                    length=customer.length,
+                    gym_id=customer.gym_id,
+                    activity_level=customer.activity_level
+                ) for customer in customers
+            ]
+        }
 
     except HTTPException as e: #Raise exception for invalid ids
         raise e
