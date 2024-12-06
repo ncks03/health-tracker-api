@@ -331,29 +331,86 @@ async def test_delete_goal(db: Session):
 
     drop_tables()
 
-# @pytest.mark.asyncio
-# async def test_update_goal(db: Session):
-#     """It should update a goal."""
-#     fill_tables(db)  # Ensure data is populated
-#
-#     updated_goal = {
-#         "weight_goal": 110, "start_date": "3000-02-01", "end_date": "3000-02-02"
-#     }
-#
-#     # Perform the PATCH request using TestClient
-#     result = client.patch(f"customers/{customer_id}/goals", json=updated_goal)
-#
-#     # Print diagnostic information
-#     print("Response status code:", result.status_code)
-#     print("Response data:", result.json())
-#
-#     # Assert that the status code is 200 (OK)
-#     assert result.status_code == 200
-#
-#     # Query the database directly to verify update
-#     goal_in_db = db.query(Goal).filter_by(id=1).first()
-#     assert goal_in_db is not None  # Ensure the goal exists
-#     assert goal_in_db.weight_goal == 110  # Verify the weight_goal was updated
-#
-#     drop_tables()
-#
+
+##########################################################################
+#  G Y M S  T E S T   C A S E S
+##########################################################################
+
+@pytest.mark.asyncio
+async def test_create_gym(db: Session):
+    """It should Create a new Gym"""
+    create_tables(db)
+
+    new_gym = {
+        "name": "Fit Gym", "address_place": "New York"
+    }
+
+    # Perform the POST request using TestClient
+    result = client.post("/gyms", json=new_gym)
+
+    # Print diagnostic information
+    print("Response status code:", result.status_code)
+    print("Response data:", result.json())
+
+    # Assert that the status code is 201 (Created)
+    assert result.status_code == 201
+
+    # Query the database directly to verify insertion
+    gym_in_db = db.query(Gym).filter_by(name='Fit Gym', address_place='New York').first()
+
+    # Print out the gym fetched from the DB to verify it was inserted
+    if gym_in_db:
+        print("Gym found in DB:", gym_in_db)
+    else:
+        print("Gym not found in DB.")
+
+    assert gym_in_db is not None  # Ensure the gym was added
+
+    drop_tables()
+
+@pytest.mark.asyncio
+async def test_get_gym(db: Session):
+    """It should get a single gym."""
+    create_tables(db)
+
+    fill_tables(db)  # Ensure data is populated
+
+    response = client.get("/gyms/1")
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+
+    drop_tables()
+
+@pytest.mark.asyncio
+async def test_get_gym_not_found(db: Session):
+    """It should handle a request for a non-existent gym."""
+    create_tables(db)
+
+    response = client.get("/gyms/9999")  # A gym that does not exist
+    assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_delete_gym(db: Session):
+    """Test that a gym can be deleted and is no longer in the database."""
+    fill_tables(db)  # Ensure data is populated
+
+    # Verify the gym exists before deletion
+    gym_before = db.query(Gym).filter_by(id=1).first()
+    assert gym_before is not None  # Ensure the gym exists
+
+    # Perform the DELETE request
+    response = client.delete("/gyms/1")
+
+    # Print diagnostic information
+    print("Response after delete request:", response.json())
+
+    # Validate the response
+    assert response.status_code == 200  # Ensure the response status code is 200
+    assert response.json() == {'message': 'Gym with id 1 successfully deleted'}  # Ensure the correct gym ID is returned
+
+    # Verify the gym no longer exists in the database
+    gym_after = db.query(Gym).filter_by(id=1).first()
+    assert gym_after is None  # Ensure the gym was deleted
+
+    drop_tables()
+
