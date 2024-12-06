@@ -459,6 +459,40 @@ async def test_delete_gym(db: Session):
     drop_tables()
 
 ##########################################################################
-#  G Y M S  T E S T   C A S E S
+#  P R O G R E S S  T E S T   C A S E S
 ##########################################################################
 
+@pytest.mark.asyncio
+async def test_create_progress(db: Session):
+    """It should Create new progress"""
+    create_tables(db)
+    fill_tables(db)
+
+    new_progress = {
+        "customer_id": 1, "date": "4000-01-01", "weight": 100,
+    }
+
+    # Perform the POST request using TestClient
+    customer_id = new_progress["customer_id"]
+    print(customer_id)
+    result = client.post(f"customers/{customer_id}/progress", json=new_progress)
+
+    # Print diagnostic information
+    print("Response status code:", result.status_code)
+    print("Response data:", result.json())
+
+    # Assert that the status code is 201 (Created)
+    assert result.status_code == 201
+
+    # Query the database directly to verify insertion
+    progress_in_db = db.query(Progress).filter_by(weight=100).first()
+
+    # Print out the progress fetched from the DB to verify it was inserted
+    if progress_in_db:
+        print("Progress found in DB:", progress_in_db)
+    else:
+        print("Progress not found in DB.")
+
+    assert progress_in_db is not None  # Ensure the progress was added
+
+    drop_tables()
