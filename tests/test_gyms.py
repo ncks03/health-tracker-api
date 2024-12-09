@@ -1,11 +1,16 @@
 import pytest
 from unittest.mock import MagicMock
 from routers.gyms import get_gyms
+from models.entities import Gym as GymTable
 from schemas.responses import GymResponse
 
 # Sample mock data for GymResponse
 mock_gyms = [
-    GymResponse(name="hot gym", address_place="ergens")
+    GymTable(id=1, name="hot gym", address_place="ergens")
+]
+
+mock_gym_responses= [
+    GymResponse(id=1, name="hot gym", address_place="ergens")
 ]
 
 @pytest.mark.asyncio
@@ -21,4 +26,4 @@ async def test_read_gyms():
 
     # Assert
     # Ensure the result is correctly formatted
-    assert result ==  mock_gyms
+    assert result ==  {"gyms": mock_gym_responses}

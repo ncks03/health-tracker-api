@@ -48,11 +48,11 @@ async def get_gyms(address_place: Optional[str] = None, db = Depends(get_db)):
                 address_place=gym.address_place
             ) for gym in gyms]
 
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        raise
 
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"unexpected error: {e}")
 
 @router.post("/")
 async def create_gym(gym: GymDTO, db = Depends(get_db)):

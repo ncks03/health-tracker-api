@@ -327,7 +327,6 @@ async def test_create_user_exists():
     #Arrange
     mock_db = MagicMock()
 
-    mock_db.query.return_value.filter.return_value.first.return_value = mock_customer
     mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
 
     #Act
