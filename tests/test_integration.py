@@ -328,9 +328,12 @@ async def test_get_goal_not_found(db: Session):
     response = client.get("/goals")  # A goal that does not exist
     assert response.status_code == 404
 
+    drop_tables()
+
 @pytest.mark.asyncio
 async def test_delete_goal(db: Session):
     """Test that a goal can be deleted and is no longer in the database."""
+    create_tables(db)
     fill_tables(db)  # Ensure data is populated
 
     # Verify the goal exists before deletion
@@ -433,9 +436,12 @@ async def test_get_gym_not_found(db: Session):
     response = client.get("/gyms/9999")  # A gym that does not exist
     assert response.status_code == 404
 
+    drop_tables()
+
 @pytest.mark.asyncio
 async def test_delete_gym(db: Session):
     """Test that a gym can be deleted and is no longer in the database."""
+    create_tables(db)
     fill_tables(db)  # Ensure data is populated
 
     # Verify the gym exists before deletion
@@ -450,7 +456,7 @@ async def test_delete_gym(db: Session):
 
     # Validate the response
     assert response.status_code == 200  # Ensure the response status code is 200
-    assert response.json() == {'message': 'Gym with id 1 successfully deleted'}  # Ensure the correct gym ID is returned
+    assert response.json() == {'message': 'Gym with id 1 successfully deleted.'}  # Ensure the correct gym ID is returned
 
     # Verify the gym no longer exists in the database
     gym_after = db.query(Gym).filter_by(id=1).first()
@@ -464,7 +470,7 @@ async def test_delete_gym(db: Session):
 
 @pytest.mark.asyncio
 async def test_create_progress(db: Session):
-    """It should Create new progress"""
+    """It should Create new Progress"""
     create_tables(db)
     fill_tables(db)
 
@@ -494,5 +500,52 @@ async def test_create_progress(db: Session):
         print("Progress not found in DB.")
 
     assert progress_in_db is not None  # Ensure the progress was added
+
+    drop_tables()
+
+@pytest.mark.asyncio
+async def test_create_progress_bad_request(db: Session):
+    """It should not Create new Progress when the request is bad"""
+    create_tables(db)
+    fill_tables(db)
+
+    new_progress = {
+        "customer_id": "one", "date": "4000-01-01", "weight": "100",
+    }
+
+    # Perform the POST request using TestClient
+    customer_id = new_progress["customer_id"]
+    print(customer_id)
+    result = client.post(f"customers/{customer_id}/progress", json=new_progress)
+
+    # Print diagnostic information
+    print("Response status code:", result.status_code)
+    print("Response data:", result.json())
+
+    # Assert that the status code is 422 (Unprocessable Entity)
+    assert result.status_code == 422
+
+    drop_tables()
+
+@pytest.mark.asyncio
+async def test_get_progress(db: Session):
+    """It should Get a single entry for Progress."""
+    create_tables(db)
+
+    fill_tables(db)  # Ensure data is populated
+
+    response = client.get("/progress/1")
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+
+    drop_tables()
+
+@pytest.mark.asyncio
+async def test_get_progress_not_found(db: Session):
+    """It should handle a request for a non-existent entry for progress."""
+    create_tables(db)
+
+    response = client.get("/progress/9999")  # A gym that does not exist
+    assert response.status_code == 404
 
     drop_tables()
