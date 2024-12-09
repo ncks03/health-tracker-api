@@ -19,7 +19,8 @@ class Customer(Base):
     progress = relationship("Progress")
     __table_args__ = (
         CheckConstraint('activity_level >= 1.2', name='chk_activity_level_minimum'),
-        CheckConstraint('activity_level <= 1.725', name='chk_activity_level_maximum')
+        CheckConstraint('activity_level <= 1.725', name='chk_activity_level_maximum'),
+        CheckConstraint("gender IN ('male', 'female')", name='chk_gender_male_female')
     )
 
 class Gym(Base):
