@@ -30,7 +30,7 @@ async def get_progress(db = Depends(get_db)):
         raise e
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @router.get("/{progress_id}")
 async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
@@ -49,5 +49,5 @@ async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
     except HTTPException as e:
         raise e
 
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
