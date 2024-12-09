@@ -1,3 +1,4 @@
+import json
 
 from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
@@ -77,13 +78,8 @@ async def read_customer_by_name(
             for x in result
         ]
 
-        # Store result in data dict
-        data = {
-            "customers": response
-        }
-
         # Return data dictionary
-        return data
+        return response
 
     except HTTPException:
         raise
@@ -133,12 +129,7 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
                 activity_level=result.activity_level
             )
 
-        # Store result in data dict
-        data = {
-            "data": response
-        }
-
-        return data
+        return response
 
     except HTTPException:
         raise
@@ -481,7 +472,7 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
 
         return JSONResponse(
             status_code=201,
-            content={"message":f"Customer successfully updated."}
+            content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
         )
 
     except SQLAlchemyError as e:

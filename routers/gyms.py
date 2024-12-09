@@ -21,14 +21,14 @@ async def get_gyms(address_place: Optional[str] = None, db = Depends(get_db)):
             # check if the gyms table in database has rows
             if all_gyms:
                 # make an array of gyms with certain structure
-                gyms_structured = {"gyms":[
+                gyms_structured = [
                     GymResponse(
                         id=gym.id,
                         name=gym.name,
                         address_place=gym.address_place
                     )
                     for gym in all_gyms
-                ]}
+                ]
 
                 return gyms_structured
             # if gyms db is empty
@@ -111,6 +111,7 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
 
         db.delete(gym)
         db.commit()
+
         return JSONResponse(
             status_code=200,
             content={"message": f"Gym with id {gym_id} successfully deleted."}
