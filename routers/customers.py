@@ -9,7 +9,7 @@ from schemas.responses import CustomerResponse, CustomerProgressResponse, Custom
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
-from services.functions import get_db, violates_constraint
+from services.functions import get_db, violates_constraint, calculate_age, calculate_daily_calories
 
 # Define router endpoint
 router = APIRouter(
@@ -287,9 +287,80 @@ async def get_customer_progress_by_id(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/daily_calorie_intake")
-async def get_daily_calorie_intake(customer_id, db = Depends(get_db)):
-    # Algorithm goes here
-    return "This function does not work yet"
+async def get_daily_calorie_intake(customer_id: int,
+                                   from_start_date: Optional[bool] = False,
+                                   db = Depends(get_db)):
+    try:
+        current_weight = db.execute(
+            select(ProgressTable.weight)
+            .where(ProgressTable.customer_id == customer_id)
+            .order_by(ProgressTable.date.desc())  # Latest date first
+            .limit(1)
+        ).scalar_one_or_none()
+
+        goal = db.execute(
+            select(GoalsTable)
+            .where(GoalsTable.customer_id == customer_id)
+            .order_by(GoalsTable.start_date.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+
+        customer = db.execute(
+            select(CustomerTable)
+            .where(CustomerTable.id == customer_id)
+            .limit(1)
+        ).scalar_one_or_none()
+
+        if not customer:
+            raise HTTPException(status_code=404, detail=f"No customer found with id {customer_id}")
+
+        if not current_weight:
+            raise HTTPException(status_code=404, detail=f"No progress found for customer with id {customer_id}")
+
+        if not goal:
+            raise HTTPException(status_code=404, detail=f"No goal found for customer with id {customer_id}")
+
+        deadline_in_days = 0
+        activity_level = customer.activity_level
+        goal_weight = goal.weight_goal
+        height = customer.length
+        gender = customer.gender
+        age = calculate_age(customer.birth_date)
+
+        if from_start_date:
+            deadline_in_days = (goal.end_date - goal.start_date).days
+        else:
+            deadline_in_days =  (goal.end_date - date.today()).days
+
+        daily_calorie_intake = calculate_daily_calories(
+            current_weight,goal_weight,deadline_in_days,
+            height, age, gender, activity_level
+        )
+
+
+
+        calculation_data = {
+            "current_weight": current_weight,
+            "goal_weight": goal_weight,
+            "deadline_in_days": deadline_in_days,
+            "activity_level": activity_level,
+            "height": height,
+            "gender": gender,
+            "age": age
+        }
+        response_data = {"dayly_calorie_intake": daily_calorie_intake,
+                         "calculation_data": calculation_data}
+
+        if daily_calorie_intake < 1200:
+            response_data["message"] = ("the expected wightfall before the deadline is unrealsitic "
+                                        "and results a calorie inteke less than 1200 per day!")
+
+        return response_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 ### POST REQUESTS ###
 @router.post("/")
@@ -326,6 +397,13 @@ async def create_customer(customer: CustomerDTO, db = Depends(get_db)):
                 raise HTTPException(
                     status_code=422,
                     detail=f"The activity level must be between 1.2 and 1.725."
+                )
+        if customer.gender:
+            genders = ["male", "female"]
+            if customer.gender not in genders:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"The gender must be 'male' or 'female'."
                 )
 
         db.add(customer) # Add entity to database
@@ -425,7 +503,7 @@ async def create_goal_for_customer(customer_id: int, goal: GoalDTO, db = Depends
     # Raise other errors
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -459,7 +537,7 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
         db.refresh(customer) # Refresh database
 
         return JSONResponse(
-            status_code=201,
+            status_code=200,
             content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
         )
 
@@ -468,7 +546,7 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
 
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 

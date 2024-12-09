@@ -1,5 +1,7 @@
+from typing import Optional
+
 from fastapi import Depends, APIRouter, HTTPException
-from models.entities import Progress
+from models.entities import Progress, Customer
 from schemas.responses import ProgressResponse
 from services.functions import get_db
 
@@ -28,7 +30,7 @@ async def get_progress(db = Depends(get_db)):
         raise e
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"unexpected error!")
 
 @router.get("/{progress_id}")
 async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
@@ -47,5 +49,5 @@ async def get_progress_by_id(progress_id: int, db = Depends(get_db)):
     except HTTPException as e:
         raise e
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"unexpected error!")

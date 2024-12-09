@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 from fastapi import HTTPException
 
 from routers.customers import get_customer_by_name, get_customer_by_id, get_daily_calorie_intake, create_customer, \
-    create_goal_for_customer, get_customer_progress, create_progress_for_customer, get_customer_goals, delete_customer
+    create_goal_for_customer, get_customer_progress, create_progress_for_customer, get_customer_goals, delete_customer, \
+    update_customer
 from schemas.dtos import CustomerDTO, ProgressDTO
 from schemas.responses import CustomerResponse, SingleCustomerResponse, CustomerProgressResponse, CustomerGoalResponse
 from models.entities import Customer as CustomerTable
@@ -364,6 +365,49 @@ async def test_create_customer_database_error():
     # Check that the exception contains the correct status code and detail
     assert exc.value.status_code == 500
     assert exc.value.detail == "An error occurred: Database error"
+
+@pytest.mark.asyncio
+async def test_update_customer_unexpected_error():
+    # Arrange
+    mock_db = MagicMock()
+    customer_id = 1
+    updated_data = {"first_name": "Unexpected"}
+
+    mock_db.query.return_value.filter.return_value.first.side_effect = Exception("Unexpected DB error")
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        await update_customer(
+            customer_id=customer_id,
+            data=MagicMock(**updated_data),
+            db=mock_db
+        )
+
+    # Assert the correct error details
+    assert exc.value.status_code == 500
+    assert exc.value.detail == "An error occurred: Unexpected DB error"
+
+@pytest.mark.asyncio
+async def test_update_customer_violate_constraints():
+    # Arrange
+    mock_db = MagicMock()
+    customer_id = 1
+    invalid_data = {"activity_level": 2.0}  # Outside the valid range
+
+    mock_customer = mock_customers[0]
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_customer
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        await update_customer(
+            customer_id=customer_id,
+            data=MagicMock(**invalid_data),
+            db=mock_db
+        )
+
+    # Assert the correct error details
+    assert exc.value.status_code == 422
+    assert exc.value.detail == "The activity level must be between 1.2 and 1.725."
 
 @pytest.mark.asyncio
 async def test_create_customer_violate_constraints():
