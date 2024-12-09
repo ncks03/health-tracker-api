@@ -166,8 +166,8 @@ async def test_create_customer_bad_request(db: Session):
     create_tables(db)
 
     new_customer = {
-        "gym_id": 1, "first_name": 'John', "last_name": 'Doe',
-        "gender": 'male', "length": 180, "activity_level": 8, "birth_date": "1990-01-01",
+        "gym_id": 1, "first_name": 100, "last_name": 'Doe',
+        "gender": 'male', "length": "180", "activity_level": 8, "birth_date": "1990-01-01",
     }
 
     # Perform the POST request using TestClient
@@ -177,8 +177,8 @@ async def test_create_customer_bad_request(db: Session):
     print("Response status code:", result.status_code)
     print("Response data:", result.json())
 
-    # Assert that the status code is 400 (bad request)
-    assert result.status_code == 400
+    # Assert that the status code is 422 (Unprocessable Entity)
+    assert result.status_code == 422
 
     drop_tables()
 
