@@ -1,6 +1,5 @@
 
-from sqlalchemy import select, update, bindparam
-from sqlalchemy.dialects.postgresql import psycopg2
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -86,9 +85,12 @@ async def read_customer_by_name(
         # Return data dictionary
         return data
 
-    except Exception as e: #Raise exception for invalid ids
+    except HTTPException:
+        raise
+
+    except Exception as e:
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -138,9 +140,12 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
 
         return data
 
+    except HTTPException:
+        raise
+
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -186,10 +191,12 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
+    except HTTPException:
+        raise
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -233,9 +240,12 @@ async def read_customer_progress(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
+    except HTTPException:
+        raise
+
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -279,9 +289,12 @@ async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
+    except HTTPException:
+        raise
+
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -341,7 +354,7 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -384,7 +397,7 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
 
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -493,15 +506,25 @@ async def delete_customer(customer_id: int, db = Depends(get_db)):
     try:
         customer = db.query(CustomerTable).filter(CustomerTable.id == customer_id).first()
 
+        if customer is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Customer {customer_id} does not exist."
+            )
+
         db.delete(customer)
         db.commit()
+
         return JSONResponse(
             status_code=200,
             content={"message": f"Customer with id {customer_id} successfully deleted."}
         )
 
+    except HTTPException:
+        raise
+
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )

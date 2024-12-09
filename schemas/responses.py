@@ -36,8 +36,9 @@ class GymResponse(BaseModel):
     address_place: str
 
 class ProgressResponse(BaseModel):
+    id: PositiveInt
     customer_id: PositiveInt
-    date: PastDate
+    date: date
     weight: PositiveInt
 
 class CustomerProgressResponse(BaseModel):
