@@ -26,4 +26,4 @@ async def test_read_gyms():
 
     # Assert
     # Ensure the result is correctly formatted
-    assert result ==  {"gyms": mock_gym_responses}
+    assert result ==  mock_gym_responses
