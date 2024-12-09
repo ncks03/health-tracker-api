@@ -48,7 +48,7 @@
         "targets": [
           {
             "expr": "up{job=\"fastapi\"}",
-            "interval": "",
+            "interval": "1",
             "legendFormat": "{{instance}}",
             "refId": "A"
           }
