@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate, PositiveFloat
 from datetime import date
 
@@ -18,6 +20,15 @@ class CustomerDTO(BaseModel):
     gender: str
     length: PositiveInt
     activity_level: PositiveFloat
+
+class CustomerUpdateDTO(BaseModel):
+    gym_id: Optional[PositiveInt] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    birth_date: Optional[PastDate] = None
+    gender: Optional[str] = None
+    length: Optional[PositiveInt] = None
+    activity_level: Optional[PositiveFloat] = None
 
 class GymDTO(BaseModel):
     name: str

@@ -1,19 +1,17 @@
-import os
-from dotenv import load_dotenv
-from pydantic import ValidationError
-from sqlalchemy import create_engine, select, func, update
-from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy import select, update
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional
 from datetime import date
 
-from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO
+from schemas.dtos import CustomerDTO, ProgressDTO, GoalDTO, CustomerUpdateDTO
 from schemas.responses import CustomerResponse, CustomerProgressResponse, CustomerGoalResponse, SingleCustomerResponse
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
-from services.functions import get_db
+from services.functions import get_db, violates_constraint
 
 # Define router endpoint
 router = APIRouter(
@@ -87,9 +85,12 @@ async def read_customer_by_name(
         # Return data dictionary
         return data
 
-    except Exception as e: #Raise exception for invalid ids
+    except HTTPException:
+        raise
+
+    except Exception as e:
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -139,9 +140,12 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
 
         return data
 
+    except HTTPException:
+        raise
+
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -187,10 +191,12 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
+    except HTTPException:
+        raise
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -234,9 +240,12 @@ async def read_customer_progress(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
+    except HTTPException:
+        raise
+
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -280,9 +289,12 @@ async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
+    except HTTPException:
+        raise
+
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -321,6 +333,13 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
                 detail=f"This user already exists!"
             )
 
+        if customer.activity_level:
+            if violates_constraint(customer.activity_level):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"The activity level must be between 1.2 and 1.725."
+                )
+
         db.add(customer) # Add entity to database
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
@@ -335,7 +354,7 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -351,18 +370,34 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
             date=date.today(),
             weight=progress.weight
         ) # Create db entity from data
-        db.add(progress) # Add entity to database
-        db.commit() # Commit changes
-        db.refresh(progress) # Refresh database
+
+        if progress.weight <= 0:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Weight must be greater than 0."
+            )
+        else:
+            db.add(progress) # Add entity to database
+            db.commit() # Commit changes
+            db.refresh(progress) # Refresh database
 
         return JSONResponse(
             status_code=201,
             content={"message": f"Progress successfully saved."}
         )
 
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"An error occurred: {e}"
+        )
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -419,38 +454,45 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 
 # Is deze wel nodig? waarom zou je deze gegevens willen veranderen?
 @router.patch("/{customer_id}")
-async def update_customer(customer_id, customer: CustomerDTO, db = Depends(get_db)):
+async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get_db)):
     try:
-        customer = CustomerTable(
-            gym_id=customer.gym_id,
-            first_name=customer.first_name,
-            last_name=customer.last_name,
-            birth_date=customer.birth_date,
-            gender=customer.gender,
-            length=customer.length,
-            activity_level=customer.activity_level
-        ) # Create db entity from data
-        statement = (
-            update(CustomerTable)
-            .where(CustomerTable.id == customer_id)
-            .values(
-                gym_id=customer.gym_id,
-                first_name=customer.first_name,
-                last_name=customer.last_name,
-                birth_date=customer.birth_date,
-                gender=customer.gender,
-                length=customer.length,
-                activity_level=customer.activity_level
+        customer = db.query(CustomerTable).filter(CustomerTable.id==customer_id).first()
+
+        if not customer:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No customer with id {customer_id}"
             )
-        )
-        db.execute(statement) # Add entity to database
+
+        if data.activity_level:
+            if violates_constraint(data.activity_level):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"The activity level must be between 1.2 and 1.725."
+                )
+
+        customer_dict = data.dict(exclude_unset=True)
+
+        for key, value in customer_dict.items():
+            setattr(customer, key, value)
+
         db.commit() # Commit changes
         db.refresh(customer) # Refresh database
 
         return JSONResponse(
             status_code=201,
-            content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
+            content={"message":f"Customer successfully updated."}
         )
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"An error occurred: {e}"
+        )
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -464,19 +506,25 @@ async def delete_customer(customer_id: int, db = Depends(get_db)):
     try:
         customer = db.query(CustomerTable).filter(CustomerTable.id == customer_id).first()
 
+        if customer is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Customer {customer_id} does not exist."
+            )
+
         db.delete(customer)
         db.commit()
+
         return JSONResponse(
             status_code=200,
             content={"message": f"Customer with id {customer_id} successfully deleted."}
         )
 
+    except HTTPException:
+        raise
+
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
-
-@router.get("/{customer_id}/dailyCalorieIntake")
-async def get_calorie_intake_per_user(customer_id: int, db = Depends(get_db)):
-    pass

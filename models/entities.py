@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float
+from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, CheckConstraint
 from sqlalchemy.orm import relationship, declarative_base
 # from sqlalchemy.ext.declarative import declarative_base
 
@@ -17,6 +17,10 @@ class Customer(Base):
     activity_level = Column(Float, nullable=False)
     goals = relationship("Goal")
     progress = relationship("Progress")
+    __table_args__ = (
+        CheckConstraint('activity_level >= 1.2', name='chk_activity_level_minimum'),
+        CheckConstraint('activity_level <= 1.725', name='chk_activity_level_maximum')
+    )
 
 class Gym(Base):
     __tablename__ = "gyms"

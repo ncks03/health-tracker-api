@@ -69,9 +69,9 @@ async def read_goals(
         # Return the formatted response
         return response
 
-    except HTTPException as e:
+    except HTTPException:
         # Re-raise HTTPExceptions, no wrapping needed
-        raise e
+        raise
 
     except Exception as e:
         # Handle any other exceptions as 500 error
@@ -127,6 +127,10 @@ async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
 
         return response
 
+    except HTTPException:
+        # Re-raise HTTPExceptions, no wrapping needed
+        raise
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -138,15 +142,25 @@ async def delete_goal(goal_id: int, db = Depends(get_db)):
     try:
         goal = db.query(GoalsTable).filter(GoalsTable.id == goal_id).first()
 
+        if goal is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Goal with ID {goal_id} not found."
+            )
+
         db.delete(goal)
         db.commit()
+
         return JSONResponse(
             status_code=200,
             content={"message": f"Goal with id {goal_id} successfully deleted."}
         )
 
+    except HTTPException:
+        raise
+
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )

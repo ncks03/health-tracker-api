@@ -31,12 +31,14 @@ class SingleCustomerResponse(BaseModel):
     activity_level: PositiveFloat
 
 class GymResponse(BaseModel):
+    id: int
     name: str
     address_place: str
 
 class ProgressResponse(BaseModel):
+    id: PositiveInt
     customer_id: PositiveInt
-    date: PastDate
+    date: date
     weight: PositiveInt
 
 class CustomerProgressResponse(BaseModel):
