@@ -10,7 +10,7 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     text = "the server is up and running"
-    version = "V1.2.1"
+    version = "V1.3.2"
     return text + " " + version
 app.include_router(customers.router)
 app.include_router(gyms.router)
