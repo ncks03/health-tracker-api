@@ -459,7 +459,7 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
         db.refresh(customer) # Refresh database
 
         return JSONResponse(
-            status_code=201,
+            status_code=200,
             content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
         )
 
