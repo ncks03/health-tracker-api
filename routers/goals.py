@@ -1,11 +1,6 @@
-import os
-from asyncio import start_server
-
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 from fastapi import Depends, APIRouter, HTTPException, Query
-from starlette.responses import JSONResponse
+from fastapi.responses import JSONResponse
 
 from schemas.responses import GoalResponse
 from models.entities import Goal as GoalsTable
@@ -69,9 +64,9 @@ async def read_goals(
         # Return the formatted response
         return response
 
-    except HTTPException:
+    except HTTPException as e:
         # Re-raise HTTPExceptions, no wrapping needed
-        raise
+        raise e
 
     except Exception as e:
         # Handle any other exceptions as 500 error
@@ -79,13 +74,6 @@ async def read_goals(
             status_code=500,
             detail=f"Could not fetch goals: {e}"
         )
-
-    # except Exception as e:
-    #     # Raise a detailed HTTP exception
-    #     raise HTTPException(
-    #         status_code=500,
-    #         detail=f"Could not fetch goals: {e}"
-    #     )
 
 @router.get("/{goals_id}", response_model=GoalResponse)
 async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
@@ -127,9 +115,9 @@ async def get_goal_by_id(goals_id: int, db=Depends(get_db)):
 
         return response
 
-    except HTTPException:
+    except HTTPException as e:
         # Re-raise HTTPExceptions, no wrapping needed
-        raise
+        raise e
 
     except Exception as e:
         raise HTTPException(
@@ -156,8 +144,8 @@ async def delete_goal(goal_id: int, db = Depends(get_db)):
             content={"message": f"Goal with id {goal_id} successfully deleted."}
         )
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
         raise HTTPException(

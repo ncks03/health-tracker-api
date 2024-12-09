@@ -5,12 +5,12 @@ import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
-from schemas.dtos import CustomerDTO
 from services.functions import get_db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from models.entities import Base, Customer, Gym, Goal, Progress
+from tests.test_customers import mock_customers
 
 load_dotenv()
 
@@ -190,7 +190,7 @@ async def test_get_customer(db: Session):
 
     response = client.get("/customers/1")
     assert response.status_code == 200
-    assert response.json()["data"]["id"] == 1
+    assert response.json()["id"] == 1
 
     drop_tables()
 
@@ -327,6 +327,42 @@ async def test_get_goal_not_found(db: Session):
 
     response = client.get("/goals")  # A goal that does not exist
     assert response.status_code == 404
+
+    drop_tables()
+
+@pytest.mark.asyncio
+async def test_update_customer(db: Session):
+    """It should update (only the first name of an) existing Customer"""
+    create_tables(db)
+    fill_tables(db)
+
+    updated_customer = {
+        "first_name": "OnlyUpdateFirstName"
+    }
+
+    # Perform the PATCH request using TestClient
+    customer_id = 1
+    result = client.patch(f"/customers/{customer_id}", json=updated_customer)
+
+    # Print diagnostic information
+    print("Response status code:", result.status_code)
+    print("Response data:", result.json())
+
+    # Assert that the status code is 200 (OK)
+    assert result.status_code == 200
+
+    # Query the database directly to verify the update
+    response = db.query(Customer).filter_by(id=customer_id).first()
+
+    # Print out the customer fetched from the DB to verify it was updated
+    if response:
+        print("Updated customer found in DB:", response)
+    else:
+        print("Customer not found in DB.")
+
+    assert response is not None  # Ensure the customer exists
+    assert response.first_name == "OnlyUpdateFirstName"
+    assert response.last_name == "Doe"
 
     drop_tables()
 

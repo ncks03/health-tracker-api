@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, PositiveInt, PastDate, AwareDatetime, FutureDate, PositiveFloat
+from pydantic import BaseModel, PositiveInt, PastDate, FutureDate, PositiveFloat
 from datetime import date
 
 

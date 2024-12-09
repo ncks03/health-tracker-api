@@ -29,7 +29,7 @@ async def get_progress(db = Depends(get_db)):
     except HTTPException as e:
         raise e
 
-    except Exception:
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"unexpected error!")
 
 @router.get("/{progress_id}")

@@ -1,6 +1,4 @@
-
-from sqlalchemy import select, update
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import select
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional
@@ -22,7 +20,7 @@ router = APIRouter(
 ### GET REQUESTS ###
 
 @router.get("/")
-async def read_customer_by_name(
+async def get_customer_by_name(
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         db = Depends(get_db)
@@ -77,16 +75,11 @@ async def read_customer_by_name(
             for x in result
         ]
 
-        # Store result in data dict
-        data = {
-            "customers": response
-        }
-
         # Return data dictionary
-        return data
+        return response
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
         raise HTTPException(
@@ -95,7 +88,7 @@ async def read_customer_by_name(
         )
 
 @router.get("/{customer_id}")
-async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
+async def get_customer_by_id(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -133,15 +126,10 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
                 activity_level=result.activity_level
             )
 
-        # Store result in data dict
-        data = {
-            "data": response
-        }
+        return response
 
-        return data
-
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
@@ -150,7 +138,7 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/goals")
-async def read_customer_goals(customer_id: int, db = Depends(get_db)):
+async def get_customer_goals(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -191,8 +179,8 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -201,7 +189,7 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/progress")
-async def read_customer_progress(customer_id: int, db = Depends(get_db)):
+async def get_customer_progress(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -240,8 +228,8 @@ async def read_customer_progress(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -250,7 +238,7 @@ async def read_customer_progress(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/progress/recent")
-async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
+async def get_customer_progress_by_id(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -289,8 +277,8 @@ async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -376,7 +364,7 @@ async def get_daily_calorie_intake(customer_id: int,
 
 ### POST REQUESTS ###
 @router.post("/")
-async def create_user(customer: CustomerDTO, db = Depends(get_db)):
+async def create_customer(customer: CustomerDTO, db = Depends(get_db)):
     try:
         customer = CustomerTable(
             gym_id=customer.gym_id,
@@ -437,7 +425,7 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
         )
 
 @router.post("/{customer_id}/progress")
-async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db = Depends(get_db)):
+async def create_progress_for_customer(customer_id: int, progress: ProgressDTO, db = Depends(get_db)):
     try:
         customer = db.query(CustomerTable).filter(CustomerTable.id==customer_id).first()
         if not customer:
@@ -464,12 +452,6 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
             content={"message": f"Progress successfully saved."}
         )
 
-    except SQLAlchemyError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"An error occurred: {e}"
-        )
-
     except HTTPException as e:
         raise e
 
@@ -480,7 +462,7 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
         )
 
 @router.post("/{customer_id}/goals")
-async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
+async def create_goal_for_customer(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
     try:
         goal = GoalsTable(
             customer_id=customer_id,
@@ -516,15 +498,12 @@ async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get
 
     # Raise error for http exception
     except HTTPException as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"An error occurred: {e}"
-        )
+        raise e
 
     # Raise other errors
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -558,14 +537,8 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
         db.refresh(customer) # Refresh database
 
         return JSONResponse(
-            status_code=201,
-            content={"message":f"Customer successfully updated."}
-        )
-
-    except SQLAlchemyError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"An error occurred: {e}"
+            status_code=200,
+            content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
         )
 
     except HTTPException as e:
@@ -573,7 +546,7 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
 
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -598,8 +571,8 @@ async def delete_customer(customer_id: int, db = Depends(get_db)):
             content={"message": f"Customer with id {customer_id} successfully deleted."}
         )
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
         raise HTTPException(

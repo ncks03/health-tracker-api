@@ -1,15 +1,13 @@
-import json
-
 import pytest
 from unittest.mock import MagicMock
 
 from fastapi import HTTPException
-from pydantic.v1 import NoneBytes
 
-from routers.customers import read_customer_by_name, read_customer_by_id, get_daily_calorie_intake, create_user, \
-    create_goal_for_user, read_customer_progress, create_progress_for_user, read_customer_goals, delete_customer
-from schemas.dtos import CustomerDTO, GoalDTO, ProgressDTO
-from schemas.responses import CustomerResponse, SingleCustomerResponse, ProgressResponse, CustomerProgressResponse, CustomerGoalResponse
+from routers.customers import get_customer_by_name, get_customer_by_id, get_daily_calorie_intake, create_customer, \
+    create_goal_for_customer, get_customer_progress, create_progress_for_customer, get_customer_goals, delete_customer, \
+    update_customer
+from schemas.dtos import CustomerDTO, ProgressDTO
+from schemas.responses import CustomerResponse, SingleCustomerResponse, CustomerProgressResponse, CustomerGoalResponse
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
@@ -92,11 +90,11 @@ async def test_get_customers():
     mock_db.execute.return_value.scalars.return_value.all.return_value = mock_customers
 
     # Act
-    result = await read_customer_by_name(db=mock_db)
+    result = await get_customer_by_name(db=mock_db)
 
     # Assert
     # Directly comparing the result to the mock data
-    assert result == {'customers': mock_customer_responses}
+    assert result == mock_customer_responses
 
 @pytest.mark.asyncio
 async def test_get_customer_by_name_found():
@@ -105,10 +103,10 @@ async def test_get_customer_by_name_found():
     mock_db.execute.return_value.scalars.return_value.all.return_value = mock_customers[:1]
 
     # Act
-    response = await read_customer_by_name(first_name="John", last_name="Doe", db=mock_db)
+    response = await get_customer_by_name(first_name="John", last_name="Doe", db=mock_db)
 
     # Assert
-    assert response == {"customers": [mock_customer_responses[0]]}
+    assert response == [mock_customer_responses[0]]
     mock_db.execute.assert_called_once()
 
 @pytest.mark.asyncio
@@ -119,7 +117,7 @@ async def test_get_customer_by_name_not_found():
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await read_customer_by_name(first_name="DoesNotExist", last_name="MyFriend", db=mock_db)
+        await get_customer_by_name(first_name="DoesNotExist", last_name="MyFriend", db=mock_db)
 
     # Assert
     assert exc.value.status_code == 404
@@ -135,7 +133,7 @@ async def test_get_customer_by_name_database_error():
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
-        await read_customer_by_name(first_name="DoesNotExist", last_name="MyFriend", db=mock_db)
+        await get_customer_by_name(first_name="DoesNotExist", last_name="MyFriend", db=mock_db)
 
     # Check that the exception contains the correct status code and detail
     assert exc.value.status_code == 500
@@ -158,11 +156,11 @@ async def test_get_customer_by_id():
      .limit.return_value.scalar).return_value = 80
 
     # Act
-    result = await read_customer_by_id(mock_customers[0].id, db=mock_db)
+    result = await get_customer_by_id(mock_customers[0].id, db=mock_db)
 
     # Assert
     # Directly comparing the result to the mock data
-    assert result == {'data': mock_single_customer}
+    assert result == mock_single_customer
 
 @pytest.mark.asyncio
 async def test_get_customer_by_id_not_found():
@@ -172,7 +170,7 @@ async def test_get_customer_by_id_not_found():
 
     # Act and Assert
     with pytest.raises(HTTPException) as exc:
-        await read_customer_by_id(customer_id=99, db=mock_db)
+        await get_customer_by_id(customer_id=99, db=mock_db)
 
     assert exc.value.status_code == 404
     assert exc.value.detail == "Customer not found"
@@ -188,7 +186,7 @@ async def test_get_customer_by_id_database_error():
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
-        await read_customer_by_id(customer_id=1, db=mock_db)
+        await get_customer_by_id(customer_id=1, db=mock_db)
 
     # Check that the exception contains the correct status code and detail
     assert exc.value.status_code == 500
@@ -212,7 +210,7 @@ async def test_get_customer_goals_found():
     mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
 
     # Act
-    response = await read_customer_goals(customer_id=1, db=mock_db)
+    response = await get_customer_goals(customer_id=1, db=mock_db)
 
     # Create the expected response using CustomerGoalResponse objects
     expected_response = {
@@ -235,11 +233,27 @@ async def test_get_customer_goals_not_found():
 
     # Act and Assert
     with pytest.raises(HTTPException) as exc:
-        await read_customer_goals(customer_id=99, db=mock_db)
+        await get_customer_goals(customer_id=99, db=mock_db)
 
     assert exc.value.status_code == 404
     assert exc.value.detail == "No goals found for customer with id 99"
     mock_db.execute.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_get_customer_goals_database_error():
+    # Arrange
+    mock_db = MagicMock()
+
+    # Simulate a database error (e.g., database connection issue)
+    mock_db.execute.side_effect = Exception("Database error")
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        await get_customer_goals(customer_id=1, db=mock_db)
+
+    # Check that the exception contains the correct status code and detail
+    assert exc.value.status_code == 500
+    assert exc.value.detail == "An error occurred: Database error"
 
 @pytest.mark.asyncio
 async def test_delete_customer_success():
@@ -294,9 +308,9 @@ async def test_delete_customer_database_error():
 
 # Test post requests
 @pytest.mark.asyncio
-async def test_create_user():
+async def test_create_customer():
     """
-    Test creating user
+    Test creating customer
     """
     #Arrange
     mock_db = MagicMock()
@@ -309,7 +323,7 @@ async def test_create_user():
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
     #Act
-    result = await create_user(mock_customers[0], db=mock_db)
+    result = await create_customer(mock_customers[0], db=mock_db)
 
     #Assert
     mock_db.add.assert_called_once()
@@ -320,9 +334,9 @@ async def test_create_user():
     assert result.body.decode() == '{"message":"Customer John Doe successfully added."}'
 
 @pytest.mark.asyncio
-async def test_create_user_exists():
+async def test_create_customer_exists():
     """
-    Test creating a user that already exists raises error
+    Test creating a customer that already exists raises error
     """
     #Arrange
     mock_db = MagicMock()
@@ -331,13 +345,13 @@ async def test_create_user_exists():
 
     #Act
     with pytest.raises(HTTPException) as result:
-        await create_user(mock_customers[0], db=mock_db)
+        await create_customer(mock_customers[0], db=mock_db)
 
     assert result.value.status_code == 400
     assert result.value.detail == "This user already exists!"
 
 @pytest.mark.asyncio
-async def test_create_user_database_error():
+async def test_create_customer_database_error():
     # Arrange
     mock_db = MagicMock()
 
@@ -346,14 +360,57 @@ async def test_create_user_database_error():
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
-        await create_user(customer=mock_customers[3], db=mock_db)
+        await create_customer(customer=mock_customers[3], db=mock_db)
 
     # Check that the exception contains the correct status code and detail
     assert exc.value.status_code == 500
     assert exc.value.detail == "An error occurred: Database error"
 
 @pytest.mark.asyncio
-async def test_create_user_violate_constraints():
+async def test_update_customer_unexpected_error():
+    # Arrange
+    mock_db = MagicMock()
+    customer_id = 1
+    updated_data = {"first_name": "Unexpected"}
+
+    mock_db.query.return_value.filter.return_value.first.side_effect = Exception("Unexpected DB error")
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        await update_customer(
+            customer_id=customer_id,
+            data=MagicMock(**updated_data),
+            db=mock_db
+        )
+
+    # Assert the correct error details
+    assert exc.value.status_code == 500
+    assert exc.value.detail == "An error occurred: Unexpected DB error"
+
+@pytest.mark.asyncio
+async def test_update_customer_violate_constraints():
+    # Arrange
+    mock_db = MagicMock()
+    customer_id = 1
+    invalid_data = {"activity_level": 2.0}  # Outside the valid range
+
+    mock_customer = mock_customers[0]
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_customer
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        await update_customer(
+            customer_id=customer_id,
+            data=MagicMock(**invalid_data),
+            db=mock_db
+        )
+
+    # Assert the correct error details
+    assert exc.value.status_code == 422
+    assert exc.value.detail == "The activity level must be between 1.2 and 1.725."
+
+@pytest.mark.asyncio
+async def test_create_customer_violate_constraints():
     """
     Test creating user
     """
@@ -368,7 +425,7 @@ async def test_create_user_violate_constraints():
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
     with pytest.raises(HTTPException) as result:
-        await create_user(mock_customer, db=mock_db)
+        await create_customer(mock_customer, db=mock_db)
 
     assert result.value.status_code == 422
     assert result.value.detail == "The activity level must be between 1.2 and 1.725."
@@ -386,7 +443,7 @@ async def test_create_goal():
         end_date=date.today() + timedelta(days=14)
     )
 
-    result = await create_goal_for_user(1, mock_goal, db=mock_db)
+    result = await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     # Assert
     mock_db.add.assert_called_once()
@@ -408,10 +465,10 @@ async def test_create_goal_past_date():
     )
 
     with pytest.raises(HTTPException) as result:
-        await create_goal_for_user(1, mock_goal, db=mock_db)
+        await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     assert result.value.status_code == 400
-    assert result.value.detail == "An error occurred: 400: End date must be in the future"
+    assert result.value.detail == "End date must be in the future"
 
 @pytest.mark.asyncio
 async def test_create_goal_same_dates():
@@ -426,10 +483,10 @@ async def test_create_goal_same_dates():
     )
 
     with pytest.raises(HTTPException) as result:
-        await create_goal_for_user(1, mock_goal, db=mock_db)
+        await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     assert result.value.status_code == 400
-    assert result.value.detail == "An error occurred: 400: Start date and end date cannot be the same"
+    assert result.value.detail == "Start date and end date cannot be the same"
 
 @pytest.mark.asyncio
 async def test_create_goal_wrong_end_date():
@@ -444,14 +501,14 @@ async def test_create_goal_wrong_end_date():
     )
 
     with pytest.raises(HTTPException) as result:
-        await create_goal_for_user(1, mock_goal, db=mock_db)
+        await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     assert result.value.status_code == 400
-    assert result.value.detail == "An error occurred: 400: End date cannot be before start date"
+    assert result.value.detail == "End date cannot be before start date"
 
 # Get progress test
 @pytest.mark.asyncio
-async def test_get_user_progress():
+async def test_get_customer_progress():
     mock_db = MagicMock()
     mock_progress = [ProgressTable(
         id = 1,
@@ -468,7 +525,7 @@ async def test_get_user_progress():
     mock_db.execute.return_value.scalars.return_value.all.return_value = mock_progress
     mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
 
-    result = await read_customer_progress(customer_id=1, db=mock_db)
+    result = await get_customer_progress(customer_id=1, db=mock_db)
 
     assert result == {
                 "customer_id": 1,
@@ -478,7 +535,7 @@ async def test_get_user_progress():
 
 # Test post progress
 @pytest.mark.asyncio
-async def test_post_user_progress():
+async def test_create_customer_progress():
     mock_db = MagicMock()
     mock_progress = ProgressDTO(
         weight = 100
@@ -486,7 +543,7 @@ async def test_post_user_progress():
 
     mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
 
-    result = await create_progress_for_user(customer_id=1, progress=mock_progress, db = mock_db)
+    result = await create_progress_for_customer(customer_id=1, progress=mock_progress, db = mock_db)
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()
@@ -495,7 +552,7 @@ async def test_post_user_progress():
     assert result.status_code == 201
 
 @pytest.mark.asyncio
-async def test_post_user_progress_no_customer():
+async def test_create_customer_progress_no_customer():
     mock_db = MagicMock()
     mock_progress = ProgressDTO(
         weight = 100
@@ -504,13 +561,13 @@ async def test_post_user_progress_no_customer():
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
     with pytest.raises(HTTPException) as result:
-        await create_progress_for_user(customer_id=5, progress=mock_progress, db = mock_db)
+        await create_progress_for_customer(customer_id=5, progress=mock_progress, db = mock_db)
 
     assert result.value.status_code == 404
     assert result.value.detail == "No customer with id 5"
 
 @pytest.mark.asyncio
-async def test_post_user_progress_negative_weight():
+async def test_create_customer_progress_negative_weight():
     mock_db = MagicMock()
     mock_progress = ProgressTable(
         weight=-100
@@ -519,7 +576,7 @@ async def test_post_user_progress_negative_weight():
     mock_db.query.return_value.filter.return_value.first.return_value = mock_customers[0]
 
     with pytest.raises(HTTPException) as result:
-        await create_progress_for_user(customer_id=1, progress=mock_progress, db = mock_db)
+        await create_progress_for_customer(customer_id=1, progress=mock_progress, db = mock_db)
 
     assert result.value.status_code == 422
     assert result.value.detail == "Weight must be greater than 0."
