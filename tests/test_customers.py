@@ -96,7 +96,7 @@ async def test_get_customers():
 
     # Assert
     # Directly comparing the result to the mock data
-    assert result == {'customers': mock_customer_responses}
+    assert result == mock_customer_responses
 
 @pytest.mark.asyncio
 async def test_get_customer_by_name_found():
@@ -108,7 +108,7 @@ async def test_get_customer_by_name_found():
     response = await get_customer_by_name(first_name="John", last_name="Doe", db=mock_db)
 
     # Assert
-    assert response == {"customers": [mock_customer_responses[0]]}
+    assert response == [mock_customer_responses[0]]
     mock_db.execute.assert_called_once()
 
 @pytest.mark.asyncio
@@ -162,7 +162,7 @@ async def test_get_customer_by_id():
 
     # Assert
     # Directly comparing the result to the mock data
-    assert result == {'data': mock_single_customer}
+    assert result == mock_single_customer
 
 @pytest.mark.asyncio
 async def test_get_customer_by_id_not_found():

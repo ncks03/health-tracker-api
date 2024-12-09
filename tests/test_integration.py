@@ -190,7 +190,7 @@ async def test_get_customer(db: Session):
 
     response = client.get("/customers/1")
     assert response.status_code == 200
-    assert response.json()["data"]["id"] == 1
+    assert response.json()["id"] == 1
 
     drop_tables()
 
