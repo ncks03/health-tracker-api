@@ -1,11 +1,6 @@
-import os
-from asyncio import start_server
-
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 from fastapi import Depends, APIRouter, HTTPException, Query
-from starlette.responses import JSONResponse
+from fastapi.responses import JSONResponse
 
 from schemas.responses import GoalResponse
 from models.entities import Goal as GoalsTable

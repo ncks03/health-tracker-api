@@ -1,7 +1,5 @@
-from typing import Optional
-
 from fastapi import Depends, APIRouter, HTTPException
-from models.entities import Progress, Customer
+from models.entities import Progress
 from schemas.responses import ProgressResponse
 from services.functions import get_db
 

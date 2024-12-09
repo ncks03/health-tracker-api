@@ -1,5 +1,3 @@
-
-from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional

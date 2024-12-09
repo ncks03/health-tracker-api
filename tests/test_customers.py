@@ -1,15 +1,12 @@
-import json
-
 import pytest
 from unittest.mock import MagicMock
 
 from fastapi import HTTPException
-from pydantic.v1 import NoneBytes
 
 from routers.customers import get_customer_by_name, get_customer_by_id, get_daily_calorie_intake, create_customer, \
     create_goal_for_customer, get_customer_progress, create_progress_for_customer, get_customer_goals, delete_customer
-from schemas.dtos import CustomerDTO, GoalDTO, ProgressDTO
-from schemas.responses import CustomerResponse, SingleCustomerResponse, ProgressResponse, CustomerProgressResponse, CustomerGoalResponse
+from schemas.dtos import CustomerDTO, ProgressDTO
+from schemas.responses import CustomerResponse, SingleCustomerResponse, CustomerProgressResponse, CustomerGoalResponse
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable

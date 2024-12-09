@@ -5,7 +5,6 @@ import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
-from schemas.dtos import CustomerDTO
 from services.functions import get_db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
