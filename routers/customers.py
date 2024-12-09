@@ -23,7 +23,7 @@ router = APIRouter(
 ### GET REQUESTS ###
 
 @router.get("/")
-async def read_customer_by_name(
+async def get_customer_by_name(
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         db = Depends(get_db)
@@ -91,7 +91,7 @@ async def read_customer_by_name(
         )
 
 @router.get("/{customer_id}")
-async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
+async def get_customer_by_id(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -141,7 +141,7 @@ async def read_customer_by_id(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/goals")
-async def read_customer_goals(customer_id: int, db = Depends(get_db)):
+async def get_customer_goals(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -192,7 +192,7 @@ async def read_customer_goals(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/progress")
-async def read_customer_progress(customer_id: int, db = Depends(get_db)):
+async def get_customer_progress(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -241,7 +241,7 @@ async def read_customer_progress(customer_id: int, db = Depends(get_db)):
         )
 
 @router.get("/{customer_id}/progress/recent")
-async def customer_progress_by_id(customer_id: int, db = Depends(get_db)):
+async def get_customer_progress_by_id(customer_id: int, db = Depends(get_db)):
     try:
         # Define sqlalchemy statement
         statement = (
@@ -296,7 +296,7 @@ async def get_daily_calorie_intake(customer_id, db = Depends(get_db)):
 
 ### POST REQUESTS ###
 @router.post("/")
-async def create_user(customer: CustomerDTO, db = Depends(get_db)):
+async def create_customer(customer: CustomerDTO, db = Depends(get_db)):
     try:
         customer = CustomerTable(
             gym_id=customer.gym_id,
@@ -350,7 +350,7 @@ async def create_user(customer: CustomerDTO, db = Depends(get_db)):
         )
 
 @router.post("/{customer_id}/progress")
-async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db = Depends(get_db)):
+async def create_progress_for_customer(customer_id: int, progress: ProgressDTO, db = Depends(get_db)):
     try:
         customer = db.query(CustomerTable).filter(CustomerTable.id==customer_id).first()
         if not customer:
@@ -393,7 +393,7 @@ async def create_progress_for_user(customer_id: int, progress: ProgressDTO, db =
         )
 
 @router.post("/{customer_id}/goals")
-async def create_goal_for_user(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
+async def create_goal_for_customer(customer_id: int, goal: GoalDTO, db = Depends(get_db)):
     try:
         goal = GoalsTable(
             customer_id=customer_id,
