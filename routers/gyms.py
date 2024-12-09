@@ -74,7 +74,7 @@ async def create_gym(gym: GymDTO, db = Depends(get_db)):
         db.refresh(gym) # Refresh database
         return JSONResponse(
             status_code=201,
-            content={"maessage": f"Gyms '{gym.name}' is successfully registered!"}
+            content={"message": f"Gym '{gym.name}' is successfully registered!"}
         )
     except HTTPException as e:
         raise e
@@ -88,7 +88,7 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
         gym = db.query(Gym).filter(Gym.id == gym_id).first()
 
         if gym is None:
-            raise HTTPException(status_code=404, detail=f"Gym with id '{gym_id}' not found")
+            raise HTTPException(status_code=404, detail=f"Gym with id {gym_id} not found")
 
         return GymResponse(
             id=gym.id,
@@ -113,7 +113,7 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
         db.commit()
         return JSONResponse(
             status_code=200,
-            content={"message": f"Gym with id '{gym_id}' successfully deleted."}
+            content={"message": f"Gym with id {gym_id} successfully deleted."}
         )
 
     # Only catch SQLAlchemy errors here
@@ -128,7 +128,7 @@ async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
     try:
         gym = db.query(Gym).filter(Gym.id == gym_id).first()
         if not gym:
-            raise HTTPException(status_code=404, detail=f"Gym with id '{gym_id}' does not exist")
+            raise HTTPException(status_code=404, detail=f"Gym with id {gym_id} does not exist")
 
         customers = db.query(Customer).filter(Customer.gym_id == gym_id).all()
         # check if the customers variable empty
