@@ -425,7 +425,7 @@ async def create_goal_for_customer(customer_id: int, goal: GoalDTO, db = Depends
     # Raise other errors
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
@@ -468,7 +468,7 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
 
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=f"An error occurred: {e}"
         )
 
