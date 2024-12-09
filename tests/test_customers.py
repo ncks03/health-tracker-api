@@ -427,7 +427,7 @@ async def test_create_goal_past_date():
         await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     assert result.value.status_code == 400
-    assert result.value.detail == "An error occurred: 400: End date must be in the future"
+    assert result.value.detail == "End date must be in the future"
 
 @pytest.mark.asyncio
 async def test_create_goal_same_dates():
@@ -445,7 +445,7 @@ async def test_create_goal_same_dates():
         await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     assert result.value.status_code == 400
-    assert result.value.detail == "An error occurred: 400: Start date and end date cannot be the same"
+    assert result.value.detail == "Start date and end date cannot be the same"
 
 @pytest.mark.asyncio
 async def test_create_goal_wrong_end_date():
@@ -463,7 +463,7 @@ async def test_create_goal_wrong_end_date():
         await create_goal_for_customer(1, mock_goal, db=mock_db)
 
     assert result.value.status_code == 400
-    assert result.value.detail == "An error occurred: 400: End date cannot be before start date"
+    assert result.value.detail == "End date cannot be before start date"
 
 # Get progress test
 @pytest.mark.asyncio

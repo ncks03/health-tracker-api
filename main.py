@@ -1,9 +1,5 @@
 ### Dependencies ###
-import os
-
-from fastapi import FastAPI, Depends
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from fastapi import FastAPI
 
 ### Imports ###
 from routers import customers, gyms, goals, progress

@@ -48,11 +48,11 @@ async def get_gyms(address_place: Optional[str] = None, db = Depends(get_db)):
                 address_place=gym.address_place
             ) for gym in gyms]
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @router.post("/")
 async def create_gym(gym: GymDTO, db = Depends(get_db)):
@@ -79,8 +79,8 @@ async def create_gym(gym: GymDTO, db = Depends(get_db)):
     except HTTPException as e:
         raise e
 
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @router.get("/{gym_id}")
 async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
@@ -98,8 +98,8 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
     except HTTPException as e:
         raise e
 
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @router.delete("/{gym_id}")
 async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
@@ -121,8 +121,8 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
     except HTTPException as e: #Raise exception for invalid ids
         raise e
 
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @router.get("/{gym_id}/customers")
 async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
@@ -155,5 +155,5 @@ async def get_customers_by_gym_id(gym_id: int, db = Depends(get_db)):
     except HTTPException as e: #Raise exception for invalid ids
         raise e
 
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"unexpected error!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")

@@ -1,6 +1,4 @@
-import json
-
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -81,8 +79,8 @@ async def get_customer_by_name(
         # Return data dictionary
         return response
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
         raise HTTPException(
@@ -131,8 +129,8 @@ async def get_customer_by_id(customer_id: int, db = Depends(get_db)):
 
         return response
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e: #Raise exception for invalid ids
         raise HTTPException(
@@ -182,8 +180,8 @@ async def get_customer_goals(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -231,8 +229,8 @@ async def get_customer_progress(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -280,8 +278,8 @@ async def get_customer_progress_by_id(customer_id: int, db = Depends(get_db)):
         # Return JSON Response
         return data
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:  # Raise exception for invalid ids
         raise HTTPException(
@@ -377,12 +375,6 @@ async def create_progress_for_customer(customer_id: int, progress: ProgressDTO, 
             content={"message": f"Progress successfully saved."}
         )
 
-    except SQLAlchemyError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"An error occurred: {e}"
-        )
-
     except HTTPException as e:
         raise e
 
@@ -429,10 +421,7 @@ async def create_goal_for_customer(customer_id: int, goal: GoalDTO, db = Depends
 
     # Raise error for http exception
     except HTTPException as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"An error occurred: {e}"
-        )
+        raise e
 
     # Raise other errors
     except Exception as e:
@@ -475,12 +464,6 @@ async def update_customer(customer_id, data: CustomerUpdateDTO, db = Depends(get
             content={"message":f"Customer {customer.first_name} {customer.last_name} successfully updated."}
         )
 
-    except SQLAlchemyError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"An error occurred: {e}"
-        )
-
     except HTTPException as e:
         raise e
 
@@ -511,8 +494,8 @@ async def delete_customer(customer_id: int, db = Depends(get_db)):
             content={"message": f"Customer with id {customer_id} successfully deleted."}
         )
 
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
 
     except Exception as e:
         raise HTTPException(
