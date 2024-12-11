@@ -1,8 +1,13 @@
 import os
-from datetime import date
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
+from datetime import date
+
+from models.entities import Customer as CustomerTable
+from models.entities import Goal as GoalsTable
+from models.entities import Progress as ProgressTable
 
 load_dotenv()
 
@@ -65,3 +70,31 @@ def calculate_daily_calories(current_weight, weight_goal, deadline_days, height,
     daily_calories = total_energy_exp - daily_deficit
 
     return round(daily_calories, 2)
+
+
+def get_data_from_db_to_calculate(customer_id, db):
+    result = db.execute(
+        select(
+            ProgressTable.weight,
+            GoalsTable.weight_goal,
+            GoalsTable.start_date,
+            GoalsTable.end_date,
+            CustomerTable.activity_level,
+            CustomerTable.length,
+            CustomerTable.gender,
+            CustomerTable.birth_date
+        )
+        .join(GoalsTable, GoalsTable.customer_id == ProgressTable.customer_id)
+        .join(CustomerTable, CustomerTable.id == ProgressTable.customer_id)
+        .where(ProgressTable.customer_id == customer_id)
+        .order_by(ProgressTable.date.desc(), GoalsTable.start_date.desc())
+        .limit(1)
+    ).fetchone()
+
+    # error handling will happen at the endpoint
+    if not result:
+        return None
+
+    # Convert the result into a dictionary
+    result_data = dict(result._mapping)
+    return result_data
