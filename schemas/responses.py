@@ -35,6 +35,11 @@ class GymResponse(BaseModel):
     name: str
     address_place: str
 
+class SingleGymResponse(BaseModel):
+    id: int
+    name: str
+    address_place: str
+
 class ProgressResponse(BaseModel):
     id: PositiveInt
     customer_id: PositiveInt

@@ -10,7 +10,7 @@ from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
 from services.functions import get_db, violates_constraint, calculate_age, calculate_daily_calories, \
-    get_data_from_db_to_calculate
+    get_data_from_db_to_calculate, calculate_daily_calories_and_macros
 
 # Define router endpoint
 router = APIRouter(
@@ -305,22 +305,26 @@ async def get_daily_calorie_intake(customer_id: int,
         else:
             deadline_in_days =  (customer_data["end_date"] - date.today()).days
 
-        daily_calorie_intake = calculate_daily_calories(
+        detailed_daily_cal_intake = calculate_daily_calories_and_macros(
             customer_data["weight"],
             customer_data["weight_goal"],
             deadline_in_days,
             customer_data["length"],
             calculate_age(customer_data["birth_date"]),
             customer_data["gender"],
-            customer_data["activity_level"],
+            customer_data["activity_level"]
         )
 
         response_data = {"customer_data": customer_data,
-                "daily_calorie_intake": daily_calorie_intake}
+                         "detailed_daily_cal_intake": detailed_daily_cal_intake}
 
-        if daily_calorie_intake < 1200:
-            response_data["message"] = (f"the expected wightfall before the deadline is unrealsitic "
-                                        f"and results a calorie inteke less than 1200 per day!")
+
+        if detailed_daily_cal_intake["total_daily_calories"] < 1200:
+            response_data["realism"] = False
+            response_data["message"] = (f"the expected weight loss before the deadline is unrealistic "
+                                        f"and results a calorie intake less than 1200 per day!")
+        else:
+            response_data["realism"] = True
 
         return response_data
 

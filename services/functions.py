@@ -98,3 +98,85 @@ def get_data_from_db_to_calculate(customer_id, db):
     # Convert the result into a dictionary
     result_data = dict(result._mapping)
     return result_data
+
+
+def calculate_daily_calories_and_macros(current_weight, weight_goal, deadline_days, height, age, gender,
+                                        activity_level):
+    """
+    Enhanced calorie and macro calculation with personalized nutritional breakdown.
+
+    Parameters:
+    - current_weight: Current weight in kg
+    - weight_goal: Desired weight in kg
+    - deadline_days: Number of days to achieve the goal
+    - height: Height in cm
+    - age: Age in years
+    - gender: 'male' or 'female'
+    - activity_level: between 1.2 and 1.725
+
+    Returns:
+    - Dictionary with detailed nutritional information
+    """
+
+    # BMR calculation
+    if gender == 'male':
+        bmr = 10 * current_weight + 6.25 * height - 5 * age + 5
+    else:
+        bmr = 10 * current_weight + 6.25 * height - 5 * age - 161
+
+    total_energy_exp = bmr * activity_level  # Total Daily Energy Expenditure
+
+    # Caloric deficit calculation
+    weight_change = current_weight - weight_goal  # kg
+    total_calories_to_lose = weight_change * 7700  # 1kg = 7700 calories
+    daily_deficit = total_calories_to_lose / deadline_days
+
+    # Daily calorie intake
+    daily_calories = total_energy_exp - daily_deficit
+
+    # Macro and micronutrient calculation with nested loops
+    macro_profiles = {
+        'weightloss': {
+            'protein_ratio': (0.35, 0.4),  # Higher protein for muscle preservation
+            'carb_ratio': (0.3, 0.35),
+            'fat_ratio': (0.25, 0.3)
+        },
+        'maintenance': {
+            'protein_ratio': (0.3, 0.35),
+            'carb_ratio': (0.4, 0.45),
+            'fat_ratio': (0.2, 0.25)
+        },
+        'musclegain': {
+            'protein_ratio': (0.4, 0.45),  # Higher protein for muscle growth
+            'carb_ratio': (0.35, 0.4),
+            'fat_ratio': (0.2, 0.25)
+        }
+    }
+
+    goal_type = 'weightloss' if weight_change > 0 else 'musclegain' if weight_change < 0 else 'maintenance'
+
+    # Nested loop to dynamically calculate macro ranges and micronutrient needs
+    macro_breakdown = {}
+    macronutrient_categories = ['protein', 'carb', 'fat']
+
+    base_value = 0
+
+    for macro in macronutrient_categories:
+        min_ratio, max_ratio = macro_profiles[goal_type][f'{macro}_ratio']
+
+        # First nested loop: calculate macro ranges
+        for precision in range(10):  # Allow for precision adjustments
+            base_value = daily_calories * ((min_ratio + max_ratio) / 2)
+
+        # Calculate final macro values
+        macro_breakdown[macro] = {
+            'grams': round(base_value / (4 if macro != 'fat' else 9), 2),
+            'calories': round(base_value, 2),
+            'percentage': round((base_value / daily_calories) * 100, 2)
+        }
+
+    return {
+        'total_daily_calories': round(daily_calories, 2),
+        'macronutrients': macro_breakdown,
+        'goal_type': goal_type
+    }

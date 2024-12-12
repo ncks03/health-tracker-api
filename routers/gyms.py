@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 from schemas.dtos import GymDTO
 from models.entities import Gym, Customer
-from schemas.responses import GymResponse, CustomerResponse
+from schemas.responses import GymResponse, CustomerResponse, SingleGymResponse
 from services.functions import get_db
 
 router = APIRouter(
@@ -64,7 +64,7 @@ async def create_gym(gym: GymDTO, db = Depends(get_db)):
         if db.query(Gym).filter(
                 Gym.address_place == gym.address_place,
                 Gym.name == gym.name).first():
-            raise HTTPException(status_code=400, detail=f"Gym with name '{gym.name}'"
+            raise HTTPException(status_code=409, detail=f"Gym with name '{gym.name}'"
                                                         f" in '{gym.address_place}' already exists")
 
         db.add(gym) # Add entity to database
@@ -88,11 +88,14 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
         if gym is None:
             raise HTTPException(status_code=404, detail=f"Gym with id {gym_id} not found")
 
-        return GymResponse(
+        gym_to_return = SingleGymResponse(
             id=gym.id,
             name=gym.name,
             address_place=gym.address_place
         )
+
+        return gym_to_return
+
     except HTTPException as e:
         raise e
 
@@ -100,7 +103,7 @@ async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @router.delete("/{gym_id}")
-async def get_gym_by_id(gym_id: int, db = Depends(get_db)):
+async def delete_gym_by_id(gym_id: int, db = Depends(get_db)):
     try:
         gym = db.query(Gym).filter(Gym.id == gym_id).first()
 
