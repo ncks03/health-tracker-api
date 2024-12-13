@@ -587,6 +587,7 @@ async def test_get_daily_calorie_intake_success():
 
     mock_customer_data = {
         "weight": 70,
+        "date": date.today() - timedelta(days=60),
         "weight_goal": 65,
         "start_date": date.today() - timedelta(days=30),
         "end_date": date.today() + timedelta(days=30),
