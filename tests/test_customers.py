@@ -1,8 +1,6 @@
 import pytest
-from unittest.mock import MagicMock
-
+from unittest.mock import MagicMock, patch
 from fastapi import HTTPException
-
 from routers.customers import get_customer_by_name, get_customer_by_id, get_daily_calorie_intake, create_customer, \
     create_goal_for_customer, get_customer_progress, create_progress_for_customer, get_customer_goals, delete_customer, \
     update_customer
@@ -583,8 +581,57 @@ async def test_create_customer_progress_negative_weight():
 
 # test algorithm/ daily calorie intake
 @pytest.mark.asyncio
-async def test_daily_calorie_intake():
-    """
-    Test getting daily calories intake from customer
-    """
-    pass
+async def test_get_daily_calorie_intake_success():
+    mock_db = MagicMock()
+    customer_id = 1
+
+    mock_customer_data = {
+        "weight": 70,
+        "date": date.today() - timedelta(days=60),
+        "weight_goal": 65,
+        "start_date": date.today() - timedelta(days=30),
+        "end_date": date.today() + timedelta(days=30),
+        "length": 175,
+        "birth_date": date(1990, 1, 1),
+        "gender": "male",
+        "activity_level": "moderate"
+    }
+
+    mock_calculation_result = {
+        "total_daily_calories": 2000,
+        "protein": 150,
+        "carbs": 200,
+        "fats": 70
+    }
+
+    with patch("routers.customers.get_data_from_db_to_calculate", return_value=mock_customer_data):
+        with patch("routers.customers.calculate_daily_calories_and_macros", return_value=mock_calculation_result):
+            response = await get_daily_calorie_intake(customer_id=customer_id, db=mock_db)
+
+            assert response["customer_data"] == mock_customer_data
+            assert response["detailed_daily_cal_intake"] == mock_calculation_result
+            assert response["realism"] is True
+
+@pytest.mark.asyncio
+async def test_get_daily_calorie_intake_customer_not_found():
+    mock_db = MagicMock()
+    customer_id = 99
+
+    with patch("routers.customers.get_data_from_db_to_calculate", return_value=None):
+        with pytest.raises(HTTPException) as exc:
+            await get_daily_calorie_intake(customer_id=customer_id, db=mock_db)
+
+        assert exc.value.status_code == 404
+        assert exc.value.detail == f"the customer with id {customer_id} does not exist or is missing essential data"
+
+@pytest.mark.asyncio
+async def test_get_daily_calorie_intake_server_error():
+    mock_db = MagicMock()
+    customer_id = 1
+
+    with patch("routers.customers.get_data_from_db_to_calculate", side_effect=Exception("Database error")):
+        with pytest.raises(HTTPException) as exc:
+            await get_daily_calorie_intake(customer_id=customer_id, db=mock_db)
+
+        assert exc.value.status_code == 500
+        assert exc.value.detail == "An error occurred: Database error"
