@@ -1,9 +1,13 @@
 import os
+from time import strptime
+
+from fastapi.exceptions import HTTPException
+
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
-from datetime import date
+from datetime import date, datetime
 
 from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
@@ -99,7 +103,6 @@ def get_data_from_db_to_calculate(customer_id, db):
     result_data = dict(result._mapping)
     return result_data
 
-
 def calculate_daily_calories_and_macros(current_weight, weight_goal, deadline_days, height, age, gender,
                                         activity_level):
     """
@@ -180,3 +183,29 @@ def calculate_daily_calories_and_macros(current_weight, weight_goal, deadline_da
         'macronutrients': macro_breakdown,
         'goal_type': goal_type
     }
+
+def calculate_daily_calories_all_customers(customer_ids, from_start_date, db):
+    result = []
+
+    for customer_id in customer_ids:
+        data = get_data_from_db_to_calculate(int(customer_id), db)
+        if not data:
+            raise HTTPException(status_code=404, detail='No data found')
+
+        weight = int(data["weight"])
+        weight_goal = data["weight_goal"]
+        height = data["length"]
+        age = calculate_age(data["birth_date"])
+        gender = data["gender"]
+        activity_level = data["activity_level"]
+
+        if from_start_date:
+            deadline_in_days = (data["end_date"] - data["start_date"]).days
+        else:
+            deadline_in_days =  (data["end_date"] - date.today()).days
+
+        calculation = calculate_daily_calories_and_macros(weight, weight_goal, deadline_in_days, height, age, gender, activity_level)
+
+        result.append(calculation)
+
+    return result

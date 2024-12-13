@@ -10,7 +10,7 @@ from models.entities import Customer as CustomerTable
 from models.entities import Goal as GoalsTable
 from models.entities import Progress as ProgressTable
 from services.functions import get_db, violates_constraint, calculate_age, calculate_daily_calories, \
-    get_data_from_db_to_calculate, calculate_daily_calories_and_macros
+    get_data_from_db_to_calculate, calculate_daily_calories_and_macros, calculate_daily_calories_all_customers
 
 # Define router endpoint
 router = APIRouter(
