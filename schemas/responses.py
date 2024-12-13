@@ -47,7 +47,7 @@ class ProgressResponse(BaseModel):
     weight: PositiveInt
 
 class CustomerProgressResponse(BaseModel):
-    date: PastDate
+    date: date
     weight: PositiveInt
 
 class CustomerGoalResponse(BaseModel):

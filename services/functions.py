@@ -80,6 +80,7 @@ def get_data_from_db_to_calculate(customer_id, db):
     result = db.execute(
         select(
             ProgressTable.weight,
+            ProgressTable.date,
             GoalsTable.weight_goal,
             GoalsTable.start_date,
             GoalsTable.end_date,
@@ -202,7 +203,7 @@ def calculate_daily_calories_all_customers(customer_ids, from_start_date, db):
         if from_start_date:
             deadline_in_days = (data["end_date"] - data["start_date"]).days
         else:
-            deadline_in_days =  (data["end_date"] - date.today()).days
+            deadline_in_days =  (data["end_date"] - data["date"]).days
 
         calculation = calculate_daily_calories_and_macros(weight, weight_goal, deadline_in_days, height, age, gender, activity_level)
 

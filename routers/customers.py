@@ -303,7 +303,7 @@ async def get_daily_calorie_intake(customer_id: int,
         if from_start_date:
             deadline_in_days = (customer_data["end_date"] - customer_data["start_date"]).days
         else:
-            deadline_in_days =  (customer_data["end_date"] - date.today()).days
+            deadline_in_days =  (customer_data["end_date"] - customer_data["date"]).days
 
         detailed_daily_cal_intake = calculate_daily_calories_and_macros(
             customer_data["weight"],
