@@ -28,18 +28,23 @@ async def get_customer_by_name(
 ): # (;
     try:
         # Define sqlalchemy statement
-        if first_name and last_name: # If both first name and last name are given
+        if first_name and last_name:
+            # If both first name and last name are given
+            first_name = first_name.capitalize()
+            last_name = last_name.capitalize()
             statement = (
                 select(CustomerTable)
                 .where(CustomerTable.first_name==first_name)
                 .where(CustomerTable.last_name==last_name)
             )
         elif first_name: # If only first name is given
+            first_name = first_name.capitalize()
             statement = (
                 select(CustomerTable)
                 .where(CustomerTable.first_name==first_name)
             )
         elif last_name: # if only last name is given
+            last_name = last_name.capitalize()
             statement = (
                 select(CustomerTable)
                 .where(CustomerTable.last_name==last_name)

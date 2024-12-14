@@ -30,11 +30,10 @@ jobs:
         env:
           # If you're using environment-specific configurations
           PYTHONPATH: .  # Ensures imports work correctly
-          # You can add other environment variables here if needed
           DB_URL: "sqlite:///:memory:?check_same_thread=False"
           TEST_DB_URL: "sqlite:///:memory:?check_same_thread=False"
         run: |
-          pytest -v --capture=no  # Verbose mode, show print statements
+          pytest -v --capture=no
 
       # Only proceed with deployment if tests pass
       - name: Log in to DigitalOcean
