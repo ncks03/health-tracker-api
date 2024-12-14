@@ -1,7 +1,7 @@
 name: CI/CD Pipeline
 
 on:
-  pull_request:
+  push:
     branches: [ "main" ]
 
 jobs:
@@ -21,9 +21,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-            pip install pytest pytest-asyncio  # Ensure asyncio support
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio  # Ensure asyncio support
 
       # Run tests with more verbose output
       - name: Run tests
@@ -35,9 +35,12 @@ jobs:
         run: |
           pytest -v --capture=no
 
-      # Only proceed with deployment if tests pass
+  deploy:
+    # This job depends on the success of the `build` job
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Log in to DigitalOcean
-        if: success()  # Only run if previous steps (including tests) succeed
         env:
           DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DO_ACCESS_TOKEN }}
           DIGITALOCEAN_USERNAME: ${{ github.actor }}
@@ -45,27 +48,23 @@ jobs:
           echo "${DIGITALOCEAN_ACCESS_TOKEN}" | docker login registry.digitalocean.com -u "${DIGITALOCEAN_USERNAME}" --password-stdin
 
       - name: Build Docker image
-        if: success()
         env:
           COMMIT_HASH: ${{ github.sha }}
         run: |
           docker build -t registry.digitalocean.com/devops-api/health-api:${COMMIT_HASH} -t registry.digitalocean.com/devops-api/health-api:latest .
 
       - name: Push Docker image to DigitalOcean
-        if: success()
         env:
           COMMIT_HASH: ${{ github.sha }}
         run: |
           docker push --all-tags registry.digitalocean.com/devops-api/health-api
 
       - name: Set up kubectl
-        if: success()
         uses: azure/setup-kubectl@v1
         with:
           version: 'latest'
 
       - name: Configure kubeconfig
-        if: success()
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBECONFIG }}
         run: |
@@ -73,7 +72,6 @@ jobs:
           echo "${KUBE_CONFIG_DATA}" > $HOME/.kube/config
 
       - name: Update Deployment with New Image
-        if: success()
         env:
           COMMIT_HASH: ${{ github.sha }}
         run: |
