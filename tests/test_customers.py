@@ -115,11 +115,12 @@ async def test_get_customer_by_name_not_found():
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await get_customer_by_name(first_name="DoesNotExist", last_name="MyFriend", db=mock_db)
+        await get_customer_by_name(first_name="Doesnotexist", last_name="Myfriend", db=mock_db)
 
     # Assert
     assert exc.value.status_code == 404
-    assert exc.value.detail == "No customers found for name DoesNotExist MyFriend"
+    assert exc.value.detail == "No customers found for name DoesNotexist MyFriend"
+    #this test was written to fail for CI/CD pipeline testing purposes.
 
 @pytest.mark.asyncio
 async def test_get_customer_by_name_database_error():
