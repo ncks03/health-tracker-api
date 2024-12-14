@@ -120,7 +120,7 @@ async def test_get_customer_by_name_not_found():
     # Assert
     assert exc.value.status_code == 404
     assert exc.value.detail == "No customers found for name DoesNotexist MyFriend"
-    #this test was written to fail for CI/CD pipeline testing purposes.
+    #this test was written to fail for CI/CD pipeline testing purposes, second try this time.
 
 @pytest.mark.asyncio
 async def test_get_customer_by_name_database_error():
