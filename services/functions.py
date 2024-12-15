@@ -38,44 +38,6 @@ def violates_constraint(level):
     else:
         return False
 
-
-def calculate_daily_calories(current_weight, weight_goal, deadline_days, height, age, gender, activity_level):
-    """
-    Parameters:
-    - current_weight: Current weight in kg
-    - goal_weight: Desired weight in kg
-    - deadline_days: Number of days to achieve the goal
-    - height: Height in cm
-    - age: Age in years
-    - gender: 'male' or 'female'
-    - activity_level: between 1.2 and 1.725
-
-    Returns:
-    - Daily calorie intake (int)
-    """
-    # BMR calculation
-    if gender == 'male':
-        bmr = 10 * current_weight + 6.25 * height - 5 * age + 5
-    elif gender == 'female':
-        bmr = 10 * current_weight + 6.25 * height - 5 * age - 161
-    else:
-        raise ValueError("Gender must be 'male' or 'female'")
-
-
-
-    total_energy_exp = bmr * activity_level  # Total Daily Energy Expenditure
-
-    # Caloric deficit calculation
-    weight_change = current_weight - weight_goal  # kg
-    total_calories_to_lose = weight_change * 7700  # 1kg = 7700 calories
-    daily_deficit = total_calories_to_lose / deadline_days
-
-    # Daily calorie intake
-    daily_calories = total_energy_exp - daily_deficit
-
-    return round(daily_calories, 2)
-
-
 def get_data_from_db_to_calculate(customer_id, db):
     result = db.execute(
         select(
