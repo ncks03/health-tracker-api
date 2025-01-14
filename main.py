@@ -15,8 +15,8 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    text = "Dit is devops"
-    version = "V1.3.8"
+    text = "The server is up and running:"
+    version = "V1.3.9"
     return text + " " + version
 
 @app.get("/daily_intake_all")
